@@ -10,14 +10,16 @@ import java.util.Date;
  * @date 2020-07-06
  **/
 @Data
-public class HmsLicensePlateRecognitionRecord {
+public class HmsFaceRecord {
 
     @TableId
     private long id;
 
-    private String number;
+    private String name;
 
-    private String color;
+    private int gender;
+
+    private double score;
 
     private String imgUrl;
 
@@ -25,7 +27,11 @@ public class HmsLicensePlateRecognitionRecord {
 
     private Date alarmTime;
 
-    private String helmetSerialNo;
+    private String deviceId;
 
     private Date createTime;
+
+    private Integer type;
+
+    private String idCardNo;
 }

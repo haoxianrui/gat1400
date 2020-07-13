@@ -1,7 +1,7 @@
 package com.juxingtech.helmet.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.juxingtech.helmet.entity.HmsLicensePlateRecognitionRecord;
+import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2020-07-06
  **/
 @Mapper
-public interface HmsLicensePlateRecognitionRecordMapper extends BaseMapper<HmsLicensePlateRecognitionRecord> {
+public interface HmsMotorVehicleRecordMapper extends BaseMapper<HmsMotorVehicleRecord> {
 
 
 }

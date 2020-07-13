@@ -1,6 +1,5 @@
 package com.juxingtech.helmet.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
@@ -24,6 +23,8 @@ public class HmsHelmet implements Serializable {
 
     private String serialNo;
 
+    private String deviceId;
+
     private Date createTime;
 
     private Date updateTime;
@@ -31,7 +32,5 @@ public class HmsHelmet implements Serializable {
     @TableField(exist = false)
     private String electricQuantity;
 
-    @TableField(exist = false)
     private Integer status;
-
 }
