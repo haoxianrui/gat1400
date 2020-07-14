@@ -15,9 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class HelmetApplication {
 
     public static void main(String[] args) {
-
         SpringApplication.run(HelmetApplication.class, args);
-
     }
 
 }

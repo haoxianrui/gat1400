@@ -2,10 +2,10 @@ server:
   port: 9110
 
 dahua-server:
-  ip: 13.65.33.11
-  port: 8314
-  username: zntk
-  password: zntk12345
+  ip: 13.65.33.4
+  port: 39101
+  username: admin
+  password: 12345678
 
 spring:
   datasource:

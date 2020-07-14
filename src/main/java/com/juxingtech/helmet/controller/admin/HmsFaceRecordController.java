@@ -6,14 +6,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.juxingtech.helmet.common.result.PageResult;
 import com.juxingtech.helmet.common.result.Result;
 import com.juxingtech.helmet.entity.HmsFaceRecord;
-import com.juxingtech.helmet.entity.HmsHelmet;
 import com.juxingtech.helmet.service.IHmsFaceRecordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;

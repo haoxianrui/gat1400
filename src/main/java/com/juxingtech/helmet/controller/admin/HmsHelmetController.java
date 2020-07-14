@@ -1,5 +1,6 @@
 package com.juxingtech.helmet.controller.admin;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -25,8 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author haoxr
@@ -98,8 +99,9 @@ public class HmsHelmetController {
     @ApiImplicitParam(name = "hmsHelmet", value = "实体JSON对象", required = true, paramType = "body", dataType = "HmsHelmet")
     @PostMapping
     public Result add(@RequestBody HmsHelmet hmsHelmet) {
-        String deviceId = hmsHelmet.getDeviceId();
-        int count = iHmsHelmetService.count(new LambdaQueryWrapper<HmsHelmet>().eq(HmsHelmet::getDeviceId, deviceId));
+        String serialNo = hmsHelmet.getSerialNo();
+        int count = iHmsHelmetService.count(new LambdaQueryWrapper<HmsHelmet>().eq(HmsHelmet::getSerialNo,
+                serialNo));
         Assert.isTrue(count <= 0, "头盔序列号已存在");
         hmsHelmet.setCreateTime(new Date());
         boolean status = iHmsHelmetService.save(hmsHelmet);
@@ -137,12 +139,28 @@ public class HmsHelmetController {
     }
 
 
+    @ApiOperation(value = "头盔状态统计")
+    @GetMapping("/stats")
+    public Result stats() {
+        int disabledNum = iHmsHelmetService.count(new LambdaQueryWrapper<HmsHelmet>()
+                .eq(HmsHelmet::getStatus, 0));
+        int total = iHmsHelmetService.count();
+        int onlineNum = redisTemplate.keys(HelmetConstants.REDIS_KEY_PREFIX_HELMET).size();
+        int offlineNum = total - onlineNum;
+        Map<String, Integer> map = new HashMap<>();
+        map.put("disabledNum", disabledNum);
+        map.put("onlineNum", onlineNum);
+        map.put("offlineNum", offlineNum);
+        return Result.success(map);
+    }
+
+
     @ApiOperation(value = "头盔识别记录统计", httpMethod = "GET")
     @GetMapping("/record-stats")
     public Result recordStats() {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDateTime now = LocalDateTime.now();
-        String startDate = dateTimeFormatter.format(now.minusDays(8));
+        String startDate = dateTimeFormatter.format(now.minusDays(7));
         String endDate = dateTimeFormatter.format(now);
 
         List<HmsRecognitionRecordStats> list = iHmsRecognitionRecordStatsService.list(
@@ -151,6 +169,12 @@ public class HmsHelmetController {
                                 " AND " +
                                 " DATE_FORMAT(date,'%Y-%m-%d') < DATE_FORMAT('" + endDate + "','%Y-%m-%d')"
                 ).orderByAsc(HmsRecognitionRecordStats::getDate));
+        if (CollectionUtil.isNotEmpty(list)) {
+            list = list.stream().map(item -> {
+                item.setDate(item.getDate().substring(item.getDate().indexOf("-") + 1));
+                return item;
+            }).collect(Collectors.toList());
+        }
         return Result.success(list);
     }
 }

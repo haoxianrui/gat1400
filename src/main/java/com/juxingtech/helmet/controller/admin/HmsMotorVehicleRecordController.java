@@ -30,7 +30,6 @@ public class HmsMotorVehicleRecordController {
     @Resource
     private IHmsMotorVehicleRecordService iHmsMotorVehicleRecordService;
 
-
     @ApiOperation(value = "列表分页", httpMethod = "GET")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", value = "页码", required = true, paramType = "query", dataType = "Integer"),

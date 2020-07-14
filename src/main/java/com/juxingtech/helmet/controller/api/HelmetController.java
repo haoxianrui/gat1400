@@ -2,9 +2,14 @@ package com.juxingtech.helmet.controller.api;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.juxingtech.helmet.bean.HelmetInfo;
 import com.juxingtech.helmet.common.constant.HelmetConstants;
 import com.juxingtech.helmet.common.result.Result;
+import com.juxingtech.helmet.entity.HmsHelmet;
+import com.juxingtech.helmet.entity.HmsNetworkConfig;
+import com.juxingtech.helmet.service.IHmsHelmetService;
+import com.juxingtech.helmet.service.IHmsNetworkConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -14,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,6 +34,12 @@ public class HelmetController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private IHmsHelmetService iHmsHelmetService;
+
+    @Autowired
+    private IHmsNetworkConfigService iHmsNetworkConfigService;
+
     @PostMapping
     @ApiOperation(value = "头盔（电量、位置）信息上传", httpMethod = "POST")
     @ApiImplicitParams({
@@ -45,5 +54,26 @@ public class HelmetController {
         log.info(helmetInfoJsonStr);
         redisTemplate.opsForValue().set(HelmetConstants.REDIS_KEY_PREFIX_HELMET + helmetInfo.getSerialNo(), helmetInfoJsonStr, 300, TimeUnit.SECONDS);
         return Result.success();
+    }
+
+
+    @GetMapping("/{serialNo}")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "serialNo", value = "头盔序列号", example = "123456789xxx", required = true, paramType = "path")
+    })
+    public Result config(
+            @PathVariable String serialNo
+    ) {
+        HmsNetworkConfig networkConfig = iHmsNetworkConfigService.getById(1);
+        Assert.notNull(networkConfig, "未查找到配置信息，请联系系统管理员");
+
+        HmsHelmet hmsHelmet = iHmsHelmetService.getOne(new LambdaQueryWrapper<HmsHelmet>()
+                .eq(HmsHelmet::getSerialNo, serialNo)
+                .eq(HmsHelmet::getStatus, 1)
+        );
+        Assert.notNull(hmsHelmet, "头盔未启动，请联系系统管理员");
+
+        networkConfig.setDeviceId(hmsHelmet.getDeviceId());
+        return Result.success(hmsHelmet);
     }
 }

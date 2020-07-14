@@ -25,4 +25,6 @@ public class HelmetInfo {
 
     @ApiModelProperty(value = "头盔纬度",example = "31.224939",required = true)
     private BigDecimal lat;
+
+
 }

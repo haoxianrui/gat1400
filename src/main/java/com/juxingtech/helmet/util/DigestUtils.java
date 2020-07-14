@@ -22,8 +22,7 @@ public class DigestUtils {
             String cnonce,
             String qop,
             String method,
-            String uri,
-            String algorithm
+            String uri
     ) {
         String A1 = username + ":" + realm + ":" + password;
         byte[] md5ByteA1 = md5(A1.getBytes());
@@ -33,10 +32,25 @@ public class DigestUtils {
         byte[] md5ByteA2 = md5(A2.getBytes());
         String HA2 = new String(Hex.encodeHex(md5ByteA2));
 
-        String original = HA1 + ":" + nonce + ":" + HA2;
+
+        String original = HA1 + ":" + (nonce + ":" + nc + ":" + cnonce + ":" + qop) + ":" + HA2;
+        // String original = HA1 + ":" + nonce + ":" + HA2;
         byte[] md5ByteOriginal = md5(original.getBytes());
         String response = new String(Hex.encodeHex(md5ByteOriginal));
         return response;
+    }
+
+    public static String getAuthorization(String username, String realm, String nonce, String uri, String qop, String nc, String cnonce, String response, String opaque) {
+        String authorization = "Digest username=\"" + username + "\"" +
+                ",realm=\"" + realm + "\"" +
+                ",nonce=\"" + nonce + "\"" +
+                ",uri=\"" + uri + "\"" +
+                ",qop=\"" + qop + "\"" +
+                ",nc=\"" + nc + "\"" +
+                ",cnonce=\"" + cnonce + "\"" +
+                ",response=\"" + response + "\"" +
+                ",opaque=\"" + opaque;
+        return authorization;
     }
 
 
@@ -74,17 +88,19 @@ public class DigestUtils {
         String val = "";
         Random random = new Random();
         //参数length，表示生成几位随机数
-        for(int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             String charOrNum = random.nextInt(2) % 2 == 0 ? "char" : "num";
             //输出字母还是数字
-            if( "char".equalsIgnoreCase(charOrNum) ) {
+            if ("char".equalsIgnoreCase(charOrNum)) {
                 //输出是大写字母还是小写字母
-                int temp = random.nextInt(2)%2 == 0 ? 65 : 97;
-                val += (char)(random.nextInt(26) + temp);
-            } else if( "num".equalsIgnoreCase(charOrNum) ) {
+                int temp = random.nextInt(2) % 2 == 0 ? 65 : 97;
+                val += (char) (random.nextInt(26) + temp);
+            } else if ("num".equalsIgnoreCase(charOrNum)) {
                 val += String.valueOf(random.nextInt(10));
             }
         }
         return val.toLowerCase();
     }
+
+
 }

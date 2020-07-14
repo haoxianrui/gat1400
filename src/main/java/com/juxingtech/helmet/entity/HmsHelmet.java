@@ -10,7 +10,7 @@ import java.util.Date;
 
 /**
  * @author hxrui
- * @since 1.0.0
+ * @date 2020-07-14
  */
 @ApiModel
 @Data
@@ -33,4 +33,7 @@ public class HmsHelmet implements Serializable {
     private String electricQuantity;
 
     private Integer status;
+
+    @TableField(exist = false)
+    private Integer onlineStatus;
 }
