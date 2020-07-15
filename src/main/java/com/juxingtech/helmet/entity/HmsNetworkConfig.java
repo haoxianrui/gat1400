@@ -28,5 +28,8 @@ public class HmsNetworkConfig implements Serializable {
     private String userPassword;
 
     @TableField(exist = false)
-    private String deviceId;
+    private String imgDeviceId;
+
+    @TableField(exist = false)
+    private String videoDeviceId;
 }

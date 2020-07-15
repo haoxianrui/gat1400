@@ -1,20 +1,25 @@
 package com.juxingtech.helmet.controller.api;
 
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.juxingtech.helmet.bean.FaceInfoReq;
 import com.juxingtech.helmet.bean.FaceRequestObject;
+import com.juxingtech.helmet.bean.ResponseStatusObjectWrapper;
+import com.juxingtech.helmet.bean.SubImageInfo;
 import com.juxingtech.helmet.common.constant.HelmetConstants;
 import com.juxingtech.helmet.common.result.Result;
-import com.juxingtech.helmet.bean.SubImageInfo;
+import com.juxingtech.helmet.common.result.ResultCodeEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,10 +39,10 @@ import java.util.concurrent.TimeUnit;
 public class FaceController {
 
 
-    @Value(value = "${dahua-server.ip}")
+    @Value(value = "${push-server.ip}")
     private String ip;
 
-    @Value(value = "${dahua-server.port}")
+    @Value(value = "${push-server.port}")
     private Integer port;
 
 
@@ -121,16 +126,30 @@ public class FaceController {
         List<SubImageInfo> subImageInfoList = new ArrayList<>();
         subImageInfoList.add(subImageInfo);
         subImageList.setSubImageInfoObject(subImageInfoList);
-
         face.setSubImageList(subImageList);
-
         faceList.add(face);
-
         faceListObject.setFaceObject(faceList);
-        log.info("人脸上传消息体：{}", JSONUtil.toJsonStr(faceRequestObject));
 
-        /*String url = "http://" + ip + ":" + port + "/VIID/Faces";
-        Object o = restTemplate.postForObject(url, faceList, Object.class);*/
-        return Result.success();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/json;charset=utf-8"));
+        headers.set("User-Identify", faceInfoReq.getDeviceId());
+        HttpEntity<String> httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(faceRequestObject), headers);
+
+        String url = "http://" + ip + ":" + port + "/VIID/Faces";
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+        int statusCode = responseEntity.getStatusCode().value();
+        if (statusCode == HttpStatus.SC_OK) {
+            String responseBody = responseEntity.getBody();
+            if (StrUtil.isNotBlank(responseBody)) {
+                ResponseStatusObjectWrapper responseStatusObjectWrapper = JSONUtil.toBean(responseBody, ResponseStatusObjectWrapper.class);
+                int uploadStatus = responseStatusObjectWrapper.getResponseStatusObject().getStatusCode();
+                if (uploadStatus == 0) {
+                    return Result.success();
+                }
+            }
+        } else if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
+            return Result.custom(ResultCodeEnum.CLIENT_REGISTER_ERROR);
+        }
+        return Result.error("人脸信息上传失败:" + responseEntity.getBody());
     }
 }

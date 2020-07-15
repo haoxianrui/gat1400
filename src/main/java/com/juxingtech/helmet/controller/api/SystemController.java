@@ -2,7 +2,10 @@ package com.juxingtech.helmet.controller.api;
 
 
 import cn.hutool.json.JSONUtil;
-import com.juxingtech.helmet.bean.*;
+import com.juxingtech.helmet.bean.KeepaliveRequestObject;
+import com.juxingtech.helmet.bean.RegisterRequestObject;
+import com.juxingtech.helmet.bean.SystemTimeObject;
+import com.juxingtech.helmet.bean.UnRegisterRequestObject;
 import com.juxingtech.helmet.common.result.Result;
 import com.juxingtech.helmet.util.DigestUtils;
 import io.swagger.annotations.Api;
@@ -10,14 +13,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -27,10 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
 @Api(tags = "GAT/1400 会话管理接口")
 @RestController
 @RequestMapping("/api/v1/system")
@@ -38,16 +30,16 @@ import java.util.List;
 public class SystemController {
 
 
-    @Value(value = "${dahua-server.ip}")
+    @Value(value = "${push-server.ip}")
     private String ip;
 
-    @Value(value = "${dahua-server.port}")
+    @Value(value = "${push-server.port}")
     private Integer port;
 
-    @Value(value = "${dahua-server.username}")
+    @Value(value = "${push-server.username}")
     private String username;
 
-    @Value(value = "${dahua-server.password}")
+    @Value(value = "${push-server.password}")
     private String password;
 
     @Autowired
@@ -58,90 +50,57 @@ public class SystemController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "deviceId", value = "设备ID", example = "13030421191190201061", required = true, paramType = "query")
     })
-    public Result register(
-            String deviceId
-    ) {
+    public Result register(String deviceId) {
         String uri = "/VIID/System/Register";
         String url = "http://" + ip + ":" + port + uri;
 
-        CloseableHttpClient httpClient = null;
-        CloseableHttpResponse httpResponse = null;
-        HttpPost httpPost = null;
-        try {
-            httpClient = HttpClients.createDefault();
-            httpPost = new HttpPost(url);
-            // 请求头
-            httpPost.setHeader("Content-type", "application/json; charset=utf-8");
-            httpPost.setHeader("User-Identify", deviceId);
-            httpPost.setHeader("Connection", "keepalive");
+        // 请求头设置
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/json; charset=UTF-8"));
+        headers.set("User-Identify", deviceId);
+        headers.setConnection("keepalive");
+        // 请求参数设置
+        RegisterRequestObject registerRequestObject = new RegisterRequestObject();
+        RegisterRequestObject.RegisterObject registerObject = new RegisterRequestObject.RegisterObject();
+        registerObject.setDeviceID(deviceId);
+        registerRequestObject.setRegisterObject(registerObject);
 
-            // 请求参数
-            RegisterRequestObject registerRequestObject = new RegisterRequestObject();
-            RegisterRequestObject.RegisterObject registerObject = new RegisterRequestObject.RegisterObject();
-            registerRequestObject.setRegisterObject(registerObject);
-            registerObject.setDeviceID(deviceId);
-            StringEntity stringEntity = new StringEntity(JSONUtil.toJsonStr(registerRequestObject), "UTF-8");
-            httpPost.setEntity(stringEntity);
-
-            // 第一次请求
-            httpResponse = httpClient.execute(httpPost);
-            int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (401 == statusCode) {
-                // 第二次请求
-                Header[] headers = httpResponse.getHeaders("WWW-Authenticate");
-                HeaderElement[] elements = headers[0].getElements();
-                String realm = null;
-                String qop = null;
-                String nonce = null;
-                String opaque = null;
-                String method = "POST";
-
-                for (HeaderElement element : elements) {
-                    if (element.getName().equals("Digest realm")) {
-                        realm = element.getValue();
-                    } else if (element.getName().equals("qop")) {
-                        qop = element.getValue();
-                    } else if (element.getName().equals("nonce")) {
-                        nonce = element.getValue();
-                    } else if (element.getName().equals("opaque")) {
-                        opaque = element.getValue();
-                    }
-                }
-                String nc = "00000001";
-                String cnonce = DigestUtils.generateSalt2(8);
-                String response = DigestUtils.getResponse(username, realm, password, nonce, nc, cnonce, qop, method, uri);
-
-                String  authorization= DigestUtils.getAuthorization(username, realm, nonce, uri, qop, nc, cnonce, response, opaque);
-                httpPost.addHeader("Authorization",authorization);
-
-                // 第二次请求
-                httpResponse = httpClient.execute(httpPost);
-                statusCode = httpResponse.getStatusLine().getStatusCode();
-                if (HttpStatus.SC_OK == statusCode) {
-                    return Result.success();
+        HttpEntity<String> httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(registerRequestObject), headers);
+        // 第一次请求
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+        if (HttpStatus.SC_UNAUTHORIZED == responseEntity.getStatusCode().value()) {
+            HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
+            String authenticate = responseEntityHeaders.get("WWW-Authenticate").get(0);
+            String[] children = authenticate.split(",");
+            // Digest realm="myrealm",qop="auth",nonce="dmktZGlnZXN0OjQzNTQyNzI3Nzg="
+            String realm = null, qop = null, nonce = null, opaque = null, method = "POST";
+            ;
+            for (int i = 0; i < children.length; i++) {
+                String item = children[i];
+                String[] itemEntry = item.split("=");
+                if (itemEntry[0].equals("Digest realm")) {
+                    realm = itemEntry[1].replaceAll("\"", "");
+                } else if (itemEntry[0].equals("qop")) {
+                    qop = itemEntry[1].replaceAll("\"", "");
+                } else if (itemEntry[0].equals("nonce")) {
+                    nonce = itemEntry[1].replaceAll("\"", "");
                 }
             }
-            return Result.error();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return Result.error();
-        } finally {
-            if (null != httpPost) {
-                httpPost.releaseConnection();
-            }
-            if (null != httpResponse) {
-                try {
-                    httpResponse.close();
-                } catch (IOException e) {
-                }
-            }
-            if (null != httpClient) {
-                try {
-                    httpClient.close();
-                } catch (IOException e) {
-                }
+            String nc = "00000001";
+            String cnonce = DigestUtils.generateSalt2(8);
+            String response = DigestUtils.getResponse(username, realm, password, nonce, nc, cnonce, qop, method, uri);
+            String authorization = DigestUtils.getAuthorization(username, realm, nonce, uri, qop, nc, cnonce, response, opaque);
+            headers.set("Authorization", authorization);
+
+            // 第二次请求
+            httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(registerRequestObject), headers);
+            responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+            if (HttpStatus.SC_OK == responseEntity.getStatusCode().value()) {
+                return Result.success();
             }
         }
+        return Result.error("注册失败");
+
     }
 
     @PostMapping("/keepalive")
@@ -168,10 +127,11 @@ public class SystemController {
 
         HttpEntity<KeepaliveRequestObject> httpEntity = new HttpEntity<>(keepaliveRequestObject, headers);
         // 请求执行
-        ResponseStatusObject responseStatusObject = restTemplate.postForObject(url, httpEntity, ResponseStatusObject.class);
-        log.info("保活响应 {}", responseStatusObject.toString());
-        return Result.success();
-
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+        if (HttpStatus.SC_OK == responseEntity.getStatusCode().value()) {
+            return Result.success();
+        }
+        return Result.error("保活失败");
     }
 
 
@@ -180,9 +140,7 @@ public class SystemController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "deviceId", value = "设备ID", example = "13030421191190201061", required = true, paramType = "query")
     })
-    public Result unregister(
-            String deviceId
-    ) {
+    public Result unregister(String deviceId) {
 
         String uri = "/VIID/System/UnRegister";
         String url = "http://" + ip + ":" + port + uri;
@@ -192,36 +150,43 @@ public class SystemController {
         headers.setContentType(MediaType.parseMediaType("application/json; charset=UTF-8"));
         headers.set("User-Identify", deviceId);
         headers.setConnection("keepalive");
-
         // 请求参数设置
         UnRegisterRequestObject unRegisterRequestObject = new UnRegisterRequestObject();
         UnRegisterRequestObject.UnRegisterObject unRegisterObject = new UnRegisterRequestObject.UnRegisterObject();
         unRegisterObject.setDeviceID(deviceId);
         unRegisterRequestObject.setUnRegisterObject(unRegisterObject);
 
-        HttpEntity<UnRegisterRequestObject> httpEntity = new HttpEntity<>(unRegisterRequestObject, headers);
-
+        HttpEntity<String> httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(unRegisterRequestObject), headers);
+        // 第一次请求
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
-        int statusCode = responseEntity.getStatusCode().value();
-
-        if (statusCode == HttpStatus.SC_UNAUTHORIZED) {
-            HttpHeaders responseHeaders = responseEntity.getHeaders();
-            List<String> list = responseHeaders.get("WWW-Authenticate");
-            String realm = null;
-            String qop = null;
-            String nonce = null;
-            String opaque = null;
-            String method = "POST";
+        if (HttpStatus.SC_UNAUTHORIZED == responseEntity.getStatusCode().value()) {
+            HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
+            String authenticate = responseEntityHeaders.get("WWW-Authenticate").get(0);
+            String[] children = authenticate.split(",");
+            // Digest realm="myrealm",qop="auth",nonce="dmktZGlnZXN0OjQzNTQyNzI3Nzg="
+            String realm = null, qop = null, nonce = null, opaque = null, method = "POST";
+            ;
+            for (int i = 0; i < children.length; i++) {
+                String item = children[i];
+                String[] itemEntry = item.split("=");
+                if (itemEntry[0].equals("Digest realm")) {
+                    realm = itemEntry[1].replaceAll("\"", "");
+                } else if (itemEntry[0].equals("qop")) {
+                    qop = itemEntry[1].replaceAll("\"", "");
+                } else if (itemEntry[0].equals("nonce")) {
+                    nonce = itemEntry[1].replaceAll("\"", "");
+                }
+            }
             String nc = "00000001";
             String cnonce = DigestUtils.generateSalt2(8);
             String response = DigestUtils.getResponse(username, realm, password, nonce, nc, cnonce, qop, method, uri);
             String authorization = DigestUtils.getAuthorization(username, realm, nonce, uri, qop, nc, cnonce, response, opaque);
             headers.set("Authorization", authorization);
-            httpEntity = new HttpEntity<>(unRegisterRequestObject, headers);
-            responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
-            statusCode = responseEntity.getStatusCode().value();
 
-            if (statusCode == HttpStatus.SC_OK) {
+            // 第二次请求
+            httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(unRegisterRequestObject), headers);
+            responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+            if (HttpStatus.SC_OK == responseEntity.getStatusCode().value()) {
                 return Result.success();
             }
         }
@@ -231,9 +196,7 @@ public class SystemController {
 
     @GetMapping("/time")
     @ApiOperation(value = "校时", httpMethod = "GET")
-    public Result time(
-            String deviceId
-    ) {
+    public Result time(String deviceId) {
         String url = "http://" + ip + ":" + port + "/VIID/System/Time";
         // 请求头设置
         HttpHeaders headers = new HttpHeaders();
@@ -241,9 +204,8 @@ public class SystemController {
         headers.setConnection("keepalive");
         HttpEntity<Object> httpEntity = new HttpEntity<>(headers);
 
-        ResponseEntity<SystemTimeObject> entity = restTemplate.getForEntity(url, SystemTimeObject.class,httpEntity);
+        ResponseEntity<SystemTimeObject> entity = restTemplate.getForEntity(url, SystemTimeObject.class, httpEntity);
         SystemTimeObject.SystemTime systemTime = entity.getBody().getSystemTime();
-        DateTimeFormatter.ofPattern("yyyyMMdd").parse("");
         return Result.success(systemTime.getLocalTime());
     }
 }

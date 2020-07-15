@@ -30,7 +30,7 @@
         <mysql.version>8.0.19</mysql.version>
         <druid.version>1.1.22</druid.version>
         <mybatis-plus.version>3.3.1</mybatis-plus.version>
-
+        <minio.version>7.1.0</minio.version>
     </properties>
 
 
@@ -146,6 +146,18 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>${mybatis-plus.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>${minio.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

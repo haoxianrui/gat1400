@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Data
 public class HelmetInfo {
 
-    @ApiModelProperty(value="头盔序列号",example="123456789",dataType = "java.lang.String",required = true)
+    @ApiModelProperty(value="头盔序列号",example="697266759002320011800001",dataType = "String",required = true)
     private String serialNo;
 
     @ApiModelProperty(value = "电量",example = "50%",required = true)

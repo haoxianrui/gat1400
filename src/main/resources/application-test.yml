@@ -1,19 +1,19 @@
 server:
   port: 9110
 
-dahua-server:
-  ip: 13.65.33.11
-  port: 8314
-  username: zntk
-  password: zntk12345
+push-server:
+  ip: 13.65.33.4
+  port: 39101
+  username: admin
+  password: 12345678
 
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.169.186:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
+    url: jdbc:mysql://192.168.169.186:3306/helmet_qinhuangdao?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
     username: root
-    password: 123456
+    password: juxing
   mqtt:
     url: tcp://192.168.169.186:1883
     username: admin

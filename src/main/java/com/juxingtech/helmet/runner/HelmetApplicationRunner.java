@@ -18,16 +18,16 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class HelmetApplicationRunner implements ApplicationRunner, Ordered {
 
-    @Value(value = "${dahua-server.ip}")
+    @Value(value = "${pull-server.ip}")
     private String ip;
 
-    @Value(value = "${dahua-server.port}")
+    @Value(value = "${pull-server.port}")
     private Integer port;
 
-    @Value(value = "${dahua-server.username}")
+    @Value(value = "${pull-server.username}")
     private String username;
 
-    @Value(value = "${dahua-server.password}")
+    @Value(value = "${pull-server.password}")
     private String password;
 
     @Autowired
@@ -39,9 +39,9 @@ public class HelmetApplicationRunner implements ApplicationRunner, Ordered {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         // 大华平台登录定时保活
-        // String token = loginService.login(ip, port, username, password);
+        String token = loginService.login(ip, port, username, password);
         // 大华平台消息订阅
-        // subscribeService.subscribe(token);
+        subscribeService.subscribe(token);
     }
 
     @Override

@@ -33,10 +33,10 @@ import java.util.Map;
 @Slf4j
 public class SubscribeService {
 
-    @Value(value = "${dahua-server.ip}")
+    @Value(value = "${pull-server.ip}")
     private String ip;
 
-    @Value(value = "${dahua-server.port}")
+    @Value(value = "${pull-server.port}")
     private Integer port;
 
     @Autowired
@@ -63,10 +63,7 @@ public class SubscribeService {
         log.info("获取订阅地址结果：{}", subscribeAddressResp);
 
         List<SubscribeAddressResp.MessageInfo> messageInfos = subscribeAddressResp.getInitMessageId();
-
         Assert.isTrue(CollectionUtil.isNotEmpty(messageInfos), "获取订阅地址失败");
-
-
         log.info("最大消息ID结果:{}", messageInfos);
 
         String subscribeAddress = subscribeAddressResp.getSubscribeAddress();
@@ -127,8 +124,7 @@ public class SubscribeService {
                 "\"repositoryName\":\"危险人员\",\"idNumber\":\"\",\"idType\":1,\"passportType\":\"14\",\"name\":\"xxxx\",\"birthday\":" +
                 "\"1972-02-20\",\"ethnicCode\":\"01\",\"gender\":1}]}}]}";
 
-        Type type = new TypeToken<MessageResp<MessageRespResult<FaceInfoResp>>>() {
-        }.getType();
+        Type type = new TypeToken<MessageResp<MessageRespResult<FaceInfoResp>>>() {}.getType();
         MessageResp<MessageRespResult<FaceInfoResp>> resp = new Gson().fromJson(responseJson, type);
 
         resp.getResults().forEach(result -> {

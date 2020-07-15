@@ -53,14 +53,12 @@ public class HmsHelmetController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", value = "页码", paramType = "query", dataType = "Integer"),
             @ApiImplicitParam(name = "limit", value = "每页数量", paramType = "query", dataType = "Integer"),
-            @ApiImplicitParam(name = "deviceId", value = "头盔设备ID", paramType = "query", dataType = "String"),
             @ApiImplicitParam(name = "serialNo", value = "头盔序列号", paramType = "query", dataType = "String"),
             @ApiImplicitParam(name = "name", value = "头盔名称", paramType = "query", dataType = "String"),
     })
     @GetMapping
     public Result list(Integer page, Integer limit, String deviceId, String name, String serialNo) {
         LambdaQueryWrapper<HmsHelmet> queryWrapper = new LambdaQueryWrapper<HmsHelmet>()
-                .like(StrUtil.isNotBlank(deviceId), HmsHelmet::getDeviceId, deviceId)
                 .like(StrUtil.isNotBlank(serialNo), HmsHelmet::getSerialNo, serialNo)
                 .like(StrUtil.isNotBlank(name), HmsHelmet::getName, name)
                 .orderByDesc(HmsHelmet::getUpdateTime)
@@ -70,7 +68,7 @@ public class HmsHelmetController {
             Page<HmsHelmet> result = iHmsHelmetService.page(new Page<>(page, limit), queryWrapper);
             if (result.getSize() > 0) {
                 result.getRecords().forEach(item -> {
-                    Object object = redisTemplate.opsForValue().get(HelmetConstants.REDIS_KEY_PREFIX_HELMET + item.getDeviceId());
+                    Object object = redisTemplate.opsForValue().get(HelmetConstants.REDIS_KEY_PREFIX_HELMET + item.getSerialNo());
                     if (object != null) {
                         String helmetInfoJsonStr = object.toString();
                         HelmetInfo helmetInfo = JSONUtil.toBean(helmetInfoJsonStr, HelmetInfo.class);

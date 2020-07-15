@@ -16,6 +16,7 @@ public enum ResultCodeEnum implements  IResultCode, Serializable {
     SUCCESS("00000","一切ok"),
 
     CLIENT_ERROR("A0001","用户端错误"),
+    CLIENT_REGISTER_ERROR("A0100","设备未注册"),
     CLIENT_REQUEST_PARAM_ERROR("A0400","用户请求参数错误"),
     CLIENT_REQUEST_PARAM_IS_BLANK("A0410","请求必填参数为空"),
     CLIENT_UPLOAD_FILE_ERROR("A0700","用户上传文件异常"),

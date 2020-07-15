@@ -23,7 +23,9 @@ public class HmsHelmet implements Serializable {
 
     private String serialNo;
 
-    private String deviceId;
+    private String imgDeviceId;
+
+    private String videoDeviceId;
 
     private Date createTime;
 

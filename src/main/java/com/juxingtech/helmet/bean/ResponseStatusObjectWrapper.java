@@ -1,22 +1,24 @@
 package com.juxingtech.helmet.bean;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class ResponseStatusObject {
+public class ResponseStatusObjectWrapper {
 
-    private ResponseStatus ResponseStatus;
+    private ResponseStatusObject ResponseStatusObject;
 
     @Data
-    public static class ResponseStatus {
+    public class ResponseStatusObject {
         private String Id;
 
         private String LocalTime;
 
         private String RequestURL;
 
-        private String StatusCode;
+        private int StatusCode;
 
         private String StatusString;
+
     }
 }

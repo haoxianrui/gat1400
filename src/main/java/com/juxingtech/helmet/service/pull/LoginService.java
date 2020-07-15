@@ -74,7 +74,7 @@ public class LoginService {
         Map<String, Object> rsp = new Gson().fromJson(response, Map.class);
         String message = (String) rsp.get("message");
         if (message != null && !"".equals(message)) {
-            System.out.println(message);
+            log.info(message);
             throw new Exception("未获取到token");
         }
         String token = (String) rsp.get("token");

@@ -58,8 +58,9 @@ public class HelmetController {
 
 
     @GetMapping("/{serialNo}")
+    @ApiOperation(value = "获取设备ID和配置信息")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "serialNo", value = "头盔序列号", example = "123456789xxx", required = true, paramType = "path")
+            @ApiImplicitParam(name = "serialNo", value = "头盔序列号", example = "697266759002320011800001", required = true, paramType = "path")
     })
     public Result config(
             @PathVariable String serialNo
@@ -71,9 +72,10 @@ public class HelmetController {
                 .eq(HmsHelmet::getSerialNo, serialNo)
                 .eq(HmsHelmet::getStatus, 1)
         );
-        Assert.notNull(hmsHelmet, "头盔未启动，请联系系统管理员");
+        Assert.notNull(hmsHelmet, "头盔不存在或未启动，请联系系统管理员");
 
-        networkConfig.setDeviceId(hmsHelmet.getDeviceId());
-        return Result.success(hmsHelmet);
+        networkConfig.setImgDeviceId(hmsHelmet.getImgDeviceId());
+        networkConfig.setVideoDeviceId(hmsHelmet.getVideoDeviceId());
+        return Result.success(networkConfig);
     }
 }
