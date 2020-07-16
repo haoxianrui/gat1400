@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Api(tags = "GAT/1400 会话管理接口")
 @RestController
 @RequestMapping("/api/v1/system")
@@ -193,19 +196,23 @@ public class SystemController {
         return Result.error("注销失败");
     }
 
-
     @GetMapping("/time")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "deviceId", value = "设备ID", example = "13030421191190201061", required = true, paramType = "query")
+    })
     @ApiOperation(value = "校时", httpMethod = "GET")
     public Result time(String deviceId) {
-        String url = "http://" + ip + ":" + port + "/VIID/System/Time";
+        /*String url = "http://" + ip + ":" + port + "/VIID/System/Time";
         // 请求头设置
         HttpHeaders headers = new HttpHeaders();
         headers.set("User-Identify", deviceId);
         headers.setConnection("keepalive");
-        HttpEntity<Object> httpEntity = new HttpEntity<>(headers);
+        HttpEntity<Object> httpEntity = new HttpEntity<>(null,headers);
 
         ResponseEntity<SystemTimeObject> entity = restTemplate.getForEntity(url, SystemTimeObject.class, httpEntity);
-        SystemTimeObject.SystemTime systemTime = entity.getBody().getSystemTime();
-        return Result.success(systemTime.getLocalTime());
+        SystemTimeObject.SystemTime systemTime = entity.getBody().getSystemTime();*/
+
+        String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
+        return Result.success(time);
     }
 }

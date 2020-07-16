@@ -2,6 +2,7 @@ package com.juxingtech.helmet;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -10,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author haoxr
  * @date 2020-05-11
  **/
-@SpringBootApplication
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableScheduling
 public class HelmetApplication {
 

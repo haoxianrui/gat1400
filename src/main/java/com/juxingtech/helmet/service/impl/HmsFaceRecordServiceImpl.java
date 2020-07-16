@@ -2,7 +2,7 @@ package com.juxingtech.helmet.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.juxingtech.helmet.entity.HmsFaceRecord;
-import com.juxingtech.helmet.mapper.HmsFaceRecordMapper;
+import com.juxingtech.helmet.mapper.mysql.HmsFaceRecordMapper;
 import com.juxingtech.helmet.service.IHmsFaceRecordService;
 import org.springframework.stereotype.Service;
 

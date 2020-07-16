@@ -1,4 +1,4 @@
-package com.juxingtech.helmet.mapper;
+package com.juxingtech.helmet.mapper.mysql;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;

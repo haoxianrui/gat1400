@@ -1,7 +1,14 @@
 server:
   port: 9110
 
+# 上传服务器
 push-server:
+  ip: 13.65.33.4
+  port: 39101
+  username: admin
+  password: 12345678
+# 下拉服务器
+pull-server:
   ip: 13.65.33.11
   port: 8314
   username: zntk
@@ -9,11 +16,18 @@ push-server:
 
 spring:
   datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://13.75.101.250:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
-    username: root
-    password: 123456
+    druid:
+      mysql:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://13.75.101.250:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
+        username: root
+        password: 123456
+      oracle:
+        driver-class-name: oracle.jdbc.driver.OracleDriver
+        url: jdbc:oracle:thin:@13.75.103.4:15211:orcl
+        username: zhinengtoukui
+        password: zhinengtoukui
+
   mqtt:
     url: tcp://13.75.101.250:1883
     username: admin
@@ -46,3 +60,10 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+oss:
+  minio:
+    endpoint: http://13.75.101.250:9000/
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket-name: helmet

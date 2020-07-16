@@ -17,7 +17,7 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-//@Configuration
+@Configuration
 @Slf4j
 public class MqttConfiguration {
 
