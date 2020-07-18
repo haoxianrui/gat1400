@@ -15,7 +15,7 @@ import java.io.InputStream;
 @Service
 public class MinioService {
 
-    private static String bucketName="helmet";
+    private static String bucketName = "helmet";
 
     private MinioClient minioClient;
 
@@ -38,19 +38,19 @@ public class MinioService {
         }
     }
 
-    public String uploadBase64(String code){
+    public String uploadBase64(String code) {
         try {
             if (!minioClient.bucketExists(bucketName)) {
                 minioClient.makeBucket(bucketName);
             }
             byte[] bytes = new BASE64Decoder().decodeBuffer(code);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-            String fileName= RandomUtil.randomUUID().replaceAll("-","")+".jpg";
+            String fileName = RandomUtil.randomUUID().replaceAll("-", "") + ".jpg";
             minioClient.putObject(bucketName, fileName, inputStream, new PutObjectOptions(inputStream.available(), -1));
             String fileUrl = minioClient.getObjectUrl(bucketName, fileName);
             return fileUrl;
-        } catch (Exception e) {
-            throw new CustomException("上传失败");
+        }catch (Exception e){
+            return null;
         }
     }
 

@@ -14,9 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableScheduling
 public class HelmetApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(HelmetApplication.class, args);
     }
-
 }

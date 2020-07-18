@@ -68,7 +68,7 @@ public class FaceController {
         List<FaceRequestObject.Face> faceList = new ArrayList<>();
 
         FaceRequestObject.Face face = new FaceRequestObject.Face();
-        face.setInfoKind(1); // 信息分类 0:其他 1:自动采集 2:人工采集
+        face.setInfoKind(0); // 信息分类 0:其他 1:自动采集 2:人工采集
         face.setLeftTopX(faceInfoReq.getLeftTopX());
         face.setLeftTopY(faceInfoReq.getLeftTopY());
         face.setRightBtmX(faceInfoReq.getRightBtmX());
@@ -134,9 +134,11 @@ public class FaceController {
         headers.setContentType(MediaType.parseMediaType("application/json;charset=utf-8"));
         headers.set("User-Identify", faceInfoReq.getDeviceId());
         HttpEntity<String> httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(faceRequestObject), headers);
+        log.info("上传人脸消息体：{}",JSONUtil.toJsonStr(faceRequestObject));
 
         String url = "http://" + ip + ":" + port + "/VIID/Faces";
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
+        log.info("上传人脸响应结果：{}",responseEntity);
         int statusCode = responseEntity.getStatusCode().value();
         if (statusCode == HttpStatus.SC_OK) {
             String responseBody = responseEntity.getBody();

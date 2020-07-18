@@ -1,6 +1,9 @@
 package com.juxingtech.helmet.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.juxingtech.helmet.entity.HmsFaceRecord;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
 import com.juxingtech.helmet.mapper.mysql.HmsMotorVehicleRecordMapper;
 import com.juxingtech.helmet.service.IHmsMotorVehicleRecordService;
@@ -15,4 +18,9 @@ public class HmsMotorVehicleRecordServiceImpl extends ServiceImpl<HmsMotorVehicl
         HmsMotorVehicleRecord> implements IHmsMotorVehicleRecordService {
 
 
+    @Override
+    public IPage<HmsMotorVehicleRecord> list(HmsMotorVehicleRecord hmsMotorVehicleRecord, Page<HmsMotorVehicleRecord> page) {
+        Page<HmsMotorVehicleRecord> result = this.baseMapper.page(hmsMotorVehicleRecord, page);
+        return result;
+    }
 }

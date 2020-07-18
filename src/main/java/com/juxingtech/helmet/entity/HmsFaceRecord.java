@@ -1,7 +1,9 @@
 package com.juxingtech.helmet.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Date;
 
@@ -13,7 +15,7 @@ import java.util.Date;
 public class HmsFaceRecord {
 
     @TableId
-    private long id;
+    private Long id;
 
     private String name;
 
@@ -34,4 +36,18 @@ public class HmsFaceRecord {
     private Integer type;
 
     private String idCardNo;
+
+    private String targetImgUrl;
+
+    @TableField(exist = false)
+    private String helmetName;
+
+    @TableField(exist = false)
+    private String serialNo;
+
+    @TableField(exist = false)
+    private String startDate;
+
+    @TableField(exist = false)
+    private String endDate;
 }

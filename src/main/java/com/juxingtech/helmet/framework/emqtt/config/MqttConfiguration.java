@@ -1,6 +1,7 @@
 package com.juxingtech.helmet.framework.emqtt.config;
 
 import com.juxingtech.helmet.framework.emqtt.callback.PushCallBack;
+import com.juxingtech.helmet.service.IHmsFaceRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ import org.springframework.messaging.MessageHandler;
 @Configuration
 @Slf4j
 public class MqttConfiguration {
+
+    @Autowired
+    private IHmsFaceRecordService iHmsFaceRecordService;
 
     @Autowired
     private MqttProperties mqttProperties;
@@ -105,12 +109,6 @@ public class MqttConfiguration {
             String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
             String payload = message.getPayload().toString();
             switch (topic) {
-                case "test_face_queue":
-                    log.info("receive mqtt message for face recognize: {}", payload);
-                    break;
-                case "test_plate_queue":
-                    log.info("receive mqtt message for license-plate recognize :{}", payload);
-                    break;
                 default:
                     log.info("{}：丢弃消息 {}", topic, payload);
             }

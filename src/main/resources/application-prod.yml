@@ -39,7 +39,7 @@ spring:
     pubClientId: ${random.value}  # 主题发送客户端ID
     subClientId: ${random.value}  # 订阅消息客户端ID
     defaultTopic: default_topic   # 默认发送主题
-    subTopics: test_face_queue,test_plate_queue
+    subTopics: face_record_queue,face_13030421191190201061
     cleanSession: true
     async: true
   redis:
@@ -54,7 +54,7 @@ spring:
         max-idle: 8
         min-idle: 0
 
-cron: 0/60 * * * * ?
+cron: 0/3 * * * * ?
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

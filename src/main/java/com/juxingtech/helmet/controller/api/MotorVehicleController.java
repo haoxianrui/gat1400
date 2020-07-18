@@ -1,6 +1,5 @@
 package com.juxingtech.helmet.controller.api;
 
-
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.juxingtech.helmet.bean.*;
@@ -38,13 +37,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MotorVehicleController {
 
-
     @Value(value = "${push-server.ip}")
     private String ip;
 
     @Value(value = "${push-server.port}")
     private Integer port;
-
 
     @Autowired
     private RestTemplate restTemplate;
@@ -63,13 +60,13 @@ public class MotorVehicleController {
     ) {
         String time = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
 
-        MotorVehicleRequestObject motorVehicleRequestObject=new MotorVehicleRequestObject();
-        MotorVehicleRequestObject.MotorVehicleListObject motorVehicleListObject=new MotorVehicleRequestObject.MotorVehicleListObject();
+        MotorVehicleRequestObject motorVehicleRequestObject = new MotorVehicleRequestObject();
+        MotorVehicleRequestObject.MotorVehicleListObject motorVehicleListObject = new MotorVehicleRequestObject.MotorVehicleListObject();
         motorVehicleRequestObject.setMotorVehicleListObject(motorVehicleListObject);
 
-        List<MotorVehicleRequestObject.MotorVehicle> motorVehicleList=new ArrayList<>();
+        List<MotorVehicleRequestObject.MotorVehicle> motorVehicleList = new ArrayList<>();
 
-        MotorVehicleRequestObject.MotorVehicle motorVehicle=new MotorVehicleRequestObject.MotorVehicle();
+        MotorVehicleRequestObject.MotorVehicle motorVehicle = new MotorVehicleRequestObject.MotorVehicle();
         motorVehicle.setInfoKind(1);  // 信息分类 0:其他 1:自动采集 2:人工采集
 
         // 图像信息基本要素ID
@@ -109,7 +106,7 @@ public class MotorVehicleController {
         String motorVehicleIdOrderNumFormat = String.format("%05d", motorVehicleIdOrderNum);
         String motorVehicleId = motorVehicleIdPrefix + motorVehicleIdOrderNumFormat;
         motorVehicle.setMotorVehicleID(motorVehicleId); // 车牌ID String(48)
-        
+
         motorVehicle.setDeviceID(motorVehicleReq.getDeviceId());// 设备ID
 
         // 图片子对象信息
@@ -132,7 +129,6 @@ public class MotorVehicleController {
         motorVehicleList.add(motorVehicle);
         motorVehicleListObject.setMotorVehicleObject(motorVehicleList);
 
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/json;charset=utf-8"));
         headers.set("User-Identify", motorVehicleReq.getDeviceId());
@@ -140,7 +136,7 @@ public class MotorVehicleController {
 
         log.info("车牌上传消息体：{}", JSONUtil.toJsonStr(motorVehicleRequestObject));
 
-       String url = "http://" + ip + ":" + port + "/VIID/MotorVehicles";
+        String url = "http://" + ip + ":" + port + "/VIID/MotorVehicles";
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, httpEntity, String.class);
         int statusCode = responseEntity.getStatusCode().value();
         if (statusCode == HttpStatus.SC_OK) {
@@ -153,6 +149,6 @@ public class MotorVehicleController {
                 }
             }
         }
-        return Result.error("车牌信息上传失败："+responseEntity.getBody());
+        return Result.error("车牌信息上传失败：" + responseEntity.getBody());
     }
 }

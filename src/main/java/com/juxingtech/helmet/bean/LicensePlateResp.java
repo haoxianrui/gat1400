@@ -13,6 +13,8 @@ import lombok.Data;
 @Data
 public class LicensePlateResp {
 
+    private int status;
+
     private String hphm;
 
     private String hpys;
@@ -23,6 +25,11 @@ public class LicensePlateResp {
 
     private String clzt;
 
+    private String cllx;
+
+    private String syxz;
+
     private int type;
+
 
 }

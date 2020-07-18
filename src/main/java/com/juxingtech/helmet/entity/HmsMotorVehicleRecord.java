@@ -1,5 +1,6 @@
 package com.juxingtech.helmet.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ import java.util.Date;
 public class HmsMotorVehicleRecord {
 
     @TableId
-    private long id;
+    private Long id;
 
     private String number;
 
@@ -30,4 +31,16 @@ public class HmsMotorVehicleRecord {
     private Date createTime;
 
     private Integer type;
+
+    @TableField(exist = false)
+    private String helmetName;
+
+    @TableField(exist = false)
+    private String serialNo;
+
+    @TableField(exist = false)
+    private String startDate;
+
+    @TableField(exist = false)
+    private String endDate;
 }

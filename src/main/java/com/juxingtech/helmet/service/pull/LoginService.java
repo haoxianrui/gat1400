@@ -87,10 +87,9 @@ public class LoginService {
         double duration = Double.valueOf(String.valueOf(rsp.get("duration")));
         Double time = duration * 3 / 4;
         DecimalFormat decimalFormat = new DecimalFormat("0.##");
-        String format = decimalFormat.format(time);
-        log.info(format);
+        String str = decimalFormat.format(time);
 
-        String cron = "0/" + format + " * * * * ?";
+        String cron = "0/" + str + " * * * * ?";
         threadPoolTaskScheduler.schedule(() -> {
             log.info("定时保活中:{}", new Date());
             String content = "{\"token\":\"" + token + "\"}";

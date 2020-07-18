@@ -72,7 +72,7 @@ public class HmsHelmetController {
                     if (object != null) {
                         String helmetInfoJsonStr = object.toString();
                         HelmetInfo helmetInfo = JSONUtil.toBean(helmetInfoJsonStr, HelmetInfo.class);
-                        item.setStatus(1);
+                        item.setOnlineStatus(1);
                         item.setElectricQuantity(helmetInfo.getElectricQuantity());
                     }
                 });

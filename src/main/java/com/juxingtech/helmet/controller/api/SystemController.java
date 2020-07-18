@@ -197,11 +197,8 @@ public class SystemController {
     }
 
     @GetMapping("/time")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "deviceId", value = "设备ID", example = "13030421191190201061", required = true, paramType = "query")
-    })
     @ApiOperation(value = "校时", httpMethod = "GET")
-    public Result time(String deviceId) {
+    public Result time() {
         /*String url = "http://" + ip + ":" + port + "/VIID/System/Time";
         // 请求头设置
         HttpHeaders headers = new HttpHeaders();

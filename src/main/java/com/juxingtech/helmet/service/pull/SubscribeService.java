@@ -5,12 +5,13 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.juxingtech.helmet.bean.*;
 import com.juxingtech.helmet.common.enums.GenderEnum;
 import com.juxingtech.helmet.common.enums.HttpEnum;
 import com.juxingtech.helmet.common.util.HttpTestUtils;
+import com.juxingtech.helmet.entity.HmsFaceRecord;
 import com.juxingtech.helmet.framework.emqtt.service.MqttOutboundService;
+import com.juxingtech.helmet.service.IHmsFaceRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +20,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Type;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * @author haoxr
@@ -32,6 +30,8 @@ import java.util.Map;
 @Service
 @Slf4j
 public class SubscribeService {
+
+    String nextMsgId = "-1";
 
     @Value(value = "${pull-server.ip}")
     private String ip;
@@ -51,6 +51,9 @@ public class SubscribeService {
 
     @Autowired
     private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+
+    @Autowired
+    private IHmsFaceRecordService iHmsFaceRecordService;
 
     /**
      * 人脸识别和车牌识别消息订阅
@@ -72,27 +75,10 @@ public class SubscribeService {
         String ip = arr[0];
         int port = Integer.valueOf(arr[1]);
 
-
-      /*  String nextFaceMsgId = messageInfos.stream().filter(item -> item.getType().equals(8))
-                .map(messageInfo -> messageInfo.getMsgId()).findFirst().get(); // 人脸消息最大ID*/
-        String nextFaceMsgId = "-1";
         // 定时拉取人脸识别消息
         threadPoolTaskScheduler.schedule(
                 () -> {
-                    log.info("定时拉取人脸识别消息");
-                    relayFaceRecognitionMessage(ip, port, token, nextFaceMsgId);
-                },
-                triggerContext -> new CronTrigger(cron).nextExecutionTime(triggerContext)
-        );
-
-        /*String nextPlateMsgId = messageInfos.stream().filter(item -> item.getType().equals(5))
-                .map(messageInfo -> messageInfo.getMsgId()).findFirst().get(); // 车辆消息最大ID*/
-        String nextPlateMsgId = "-1";
-        // 定时拉取车牌识别消息
-        threadPoolTaskScheduler.schedule(
-                () -> {
-                    log.info("定时拉取车牌识别消息");
-                    relayLicensePlateRecognitionMessage(ip, port, token, nextPlateMsgId);
+                    relayFaceRecognitionMessage(ip, port, token);
                 },
                 triggerContext -> new CronTrigger(cron).nextExecutionTime(triggerContext)
         );
@@ -100,115 +86,87 @@ public class SubscribeService {
 
 
     // 人脸识别消息
-    public void relayFaceRecognitionMessage(String ip, int port, String token, String nextMsgId) {
-        /*String content = "?msgId=" + (nextMsgId == null ? 0 : nextMsgId) + "&msgNum=4&type=8";
-        String responseJson = HttpTestUtils.httpRequest(HttpEnum.GET, ip, port, SUBSCRIBE_ACTION, token, content);*/
-        String responseJson = "{\"totalCount\":2,\"nextMsgId\":2,\"results\":[{\"method\":\"vms.xxx\",\"id\":1,\"info\":{\"event\":" +
-                "\"faceAlarm\",\"channelId\":\"123456\",\"channelCode\":\"123456\",\"channelName\":\"123456\",\"gpsX\":3333.33333,\"gpsY\":222.222222,\"deviceId\":\"test_face_queue\",\"gbCode\":\"xxx\",\"uid\":\"xxx\",\"faceImgId\":\"xxx\"," +
-                "\"faceImgUrl\":\"http://13.75.101.250:9000/face/face1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T035141Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=6c48561b9db65bcde58b2de6ee770913370f493e56a982b51d7b20d163d03d6f\"," +
-                "\"imgUrl\":\"xxxxxx\",\"faceImgUrlEx\":\"xxxxxx\",\"imgUrlEx\":\"xxxxxx\",\"alarmCode\":\"xxxx\",\"alarmId\":\"xxxx\"," +
-                "\"faceRecordId\":\"xx\",\"recordId\":\"xx\",\"capTime\":1503709064010.0,\"alarmTime\":1503709064,\"faceLeft\":123,\"faceTop\":123,\"faceRight\":234,\"faceBottom\":333,\"extRecordId\":\"xxxxxx\",\"extParam\":\"xxxxxx\",\"dataSource\":1,\"age\":18,\"gender\":1,\"race\":1,\"ethnicCode\":\"01\",\"fringe\":1,\"eye\":1,\"mouth\":1,\"beard\":1,\"mask\":1,\"glasses\":1,\"emotion\":1," +
-                "\"similarFaces\":[{\"targetFaceImgId\":\"xxxx\",\"targetFaceImgUrl\":\"xxxxxx\",\"targetImgUrl\":\"xxxxxx\"," +
-                "\"similarity\":0.913,\"repositoryId\":\"xxxx\",\"repositoryName\":\"危险人员\",\"idNumber\":\"\"," +
-                "\"idType\":0,\"passportType\":\"14\",\"name\":\"xxxx\",\"birthday\":\"1972-02-20\",\"ethnicCode\":\"01\"," +
-                "\"gender\":1}]}},{\"method\":\"vms.xxx\",\"id\":1,\"info\":{\"event\":\"faceAlarm\",\"channelId\":\"123456\"," +
-                "\"channelCode\":\"123456\",\"channelName\":\"123456\",\"gpsX\":3333.33333,\"gpsY\":222.222222,\"deviceId\":\"test_face_queue\"" +
-                ",\"gbCode\":\"xxx\",\"uid\":\"xxx\",\"faceImgId\":\"xxx\"," +
-                "\"faceImgUrl\":\"http://13.75.101.250:9000/face/face2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T035120Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=1333e5101f21755801b3f9f142b801df154f25d51b51f793b2841cc0a79b33f4\"," +
-                "\"imgUrl\":\"xxxxxx\",\"faceImgUrlEx\":\"xxxxxx\",\"imgUrlEx\":\"xxxxxx\",\"alarmCode\":\"xxxx\",\"alarmId\":\"xxxx\",\"" +
-                "faceRecordId\":\"xx\",\"recordId\":\"xx\",\"capTime\":1503709064010.0,\"alarmTime\":1503709064,\"faceLeft\":123," +
-                "\"faceTop\":123,\"faceRight\":234,\"faceBottom\":333,\"extRecordId\":\"xxxxxx\",\"extParam\":\"xxxxxx\"," +
-                "\"dataSource\":1,\"age\":18,\"gender\":1,\"race\":1,\"ethnicCode\":\"01\",\"fringe\":1,\"eye\":1,\"mouth\":1," +
-                "\"beard\":1,\"mask\":1,\"glasses\":1,\"emotion\":1,\"similarFaces\":[{\"targetFaceImgId\":\"xxxx\",\"" +
-                "targetFaceImgUrl\":\"xxxxxx\",\"targetImgUrl\":\"xxxxxx\",\"similarity\":0.913,\"repositoryId\":\"xxxx\"," +
-                "\"repositoryName\":\"危险人员\",\"idNumber\":\"\",\"idType\":1,\"passportType\":\"14\",\"name\":\"xxxx\",\"birthday\":" +
-                "\"1972-02-20\",\"ethnicCode\":\"01\",\"gender\":1}]}}]}";
+    public void relayFaceRecognitionMessage(String ip, int port, String token) {
+        log.info("消息ID:{}",nextMsgId);
+        String content = "?msgId=" + (nextMsgId == null ? 0 : nextMsgId) + "&msgNum=64&type=8";
+        String responseJson = HttpTestUtils.httpRequest(HttpEnum.GET, ip, port, SUBSCRIBE_ACTION, token, content);
+        // String responseJson = "{\t\"nextMsgId\":\"232968\",\t\"results\":[\t\t\"{\\\"method\\\":\\\"fcs.faceAlarmEx\\\",\\\"id\\\":1,\\\"info\\\":{\\\"age\\\":38,\\\"alarmCode\\\":\\\"520000000000022020071712093535988\\\",\\\"alarmId\\\":\\\"520000000000022020071712093535988\\\",\\\"alarmSource\\\":0,\\\"alarmTime\\\":1594958996,\\\"alarmType\\\":\\\"903\\\",\\\"beard\\\":0,\\\"capTime\\\":1594959097000,\\\"channelCode\\\":\\\"AH33EDBFA1C7RM49V90F26\\\",\\\"channelId\\\":\\\"AH33EDBFA1C7RM49V90F26\\\",\\\"channelName\\\":\\\"交警智能头盔1\\\",\\\"dataSource\\\":0,\\\"deviceId\\\":\\\"AH33EDBFA1C7RM49V81UB0\\\",\\\"emotion\\\":7,\\\"event\\\":\\\"faceAlarmEx\\\",\\\"extParam\\\":\\\"\\\",\\\"eye\\\":1,\\\"faceBottom\\\":100.0,\\\"faceImgId\\\":\\\"515949589964824382\\\",\\\"faceImgUrl\\\":\\\"http://13.65.33.32:38498/image/efs_AH33EDBF_001/ecd90c1ff2ede3433f5012a0_face_11_3/archivefile1-2020-07-16-131054-F60314E73121410D:465575936/48898.jpg\\\",\\\"faceImgUrlEx\\\":\\\"/image/efs_AH33EDBF_001/ecd90c1ff2ede3433f5012a0_face_11_3/archivefile1-2020-07-16-131054-F60314E73121410D:465575936/48898.jpg\\\",\\\"faceLeft\\\":100.0,\\\"faceRecordId\\\":\\\"130304211911902010610220200717121137000010600001\\\",\\\"faceRight\\\":100.0,\\\"faceTop\\\":100.0,\\\"fringe\\\":2,\\\"gender\\\":1,\\\"glasses\\\":0,\\\"imgUrl\\\":\\\"\\\",\\\"imgUrlEx\\\":\\\"\\\",\\\"mask\\\":0,\\\"mouth\\\":0,\\\"race\\\":0,\\\"recordId\\\":\\\"130304211911902010610220200717121137000010600001\\\",\\\"similarFaces\\\":[{\\\"gender\\\":1,\\\"idNumber\\\":\\\"130304199003078594\\\",\\\"idType\\\":111,\\\"name\\\":\\\"郝先瑞\\\",\\\"repositoryId\\\":\\\"1218217277\\\",\\\"repositoryName\\\":\\\"智慧头盔测试库\\\",\\\"similarity\\\":0.9998998641967773,\\\"targetFaceImgId\\\":\\\"MyNdYt7tjoM11ZELS7SAGtVya9zo7eS9\\\",\\\"targetFaceImgUrl\\\":\\\"http://13.65.33.32:38498/eagle-pic/download/pic/C5hHpXb4/home/hadoop/picture/static/7571/1594903752099/UserBig_1594903752090_263714.JPG\\\",\\\"targetFaceImgUrlEx\\\":\\\"/eagle-pic/download/pic/C5hHpXb4/home/hadoop/picture/static/7571/1594903752099/UserBig_1594903752090_263714.JPG\\\",\\\"targetImgUrl\\\":\\\"http://13.65.33.32:38498/eagle-pic/download/pic/C5hHpXb4/home/hadoop/picture/static/7571/1594903752099/UserBig_1594903752090_263714.JPG\\\",\\\"targetImgUrlEx\\\":\\\"/eagle-pic/download/pic/C5hHpXb4/home/hadoop/picture/static/7571/1594903752099/UserBig_1594903752090_263714.JPG\\\"}],\\\"status\\\":1,\\\"uid\\\":\\\"13\\\"}}\"\t],\t\"totalCount\":1}\n";
+        log.info("拉取人脸消息：{}", responseJson);
 
-        Type type = new TypeToken<MessageResp<MessageRespResult<FaceInfoResp>>>() {}.getType();
-        MessageResp<MessageRespResult<FaceInfoResp>> resp = new Gson().fromJson(responseJson, type);
+        MessageResp messageResp = JSONUtil.toBean(responseJson, MessageResp.class);
+        List<String> results = messageResp.getResults();
+        nextMsgId = messageResp.getNextMsgId();
 
-        resp.getResults().forEach(result -> {
-            FaceInfoResp faceInfoResp = result.getInfo();
-            if (faceInfoResp != null) {
-                // emqtt队列名称
-                String queueName = faceInfoResp.getDeviceId();
-                log.info("推送人脸识别消息 主题：{}", queueName);
-                if (StrUtil.isNotBlank(queueName)) {
-                    Map<String, Object> map = new HashMap<>();
-                    String faceImgUrl = faceInfoResp.getFaceImgUrl();
-                    List<FaceInfoResp.SimilarFacesBean> similarFaces = faceInfoResp.getSimilarFaces();
-                    if (CollectionUtil.isNotEmpty(similarFaces)) {
-                        // 获取相似度最高的人脸信息并推送至emqtt
-                        FaceInfoResp.SimilarFacesBean similarFacesBean = similarFaces.stream()
-                                .max(Comparator.comparing(FaceInfoResp.SimilarFacesBean::getSimilarity))
-                                .orElse(null);
-                        String name = similarFacesBean.getName();
-                        String gender = GenderEnum.getNameByCode(similarFacesBean.getGender());
-                        String similarity = similarFacesBean.getSimilarity() * 100 + "%";
-                        String repositoryName = similarFacesBean.getRepositoryName();
-                        map.put("name", name);
-                        map.put("gender", gender);
-                        map.put("similarity", similarity);
-                        map.put("alarmTime", "2020-07-06 12:00:00");
-                        map.put("alarmContent", repositoryName);
-                        map.put("faceImgUrl", faceImgUrl);
-                        map.put("type", similarFacesBean.getIdType());
-                        // 推送至头盔
-                        String message = JSONUtil.toJsonStr(map);
-                        log.info("推送人脸识别消息 消息：{}", message);
-                        mqttOutputService.sendToMqtt(queueName, message);
+        if (CollectionUtil.isEmpty(results)) {
+            return;
+        }
+
+        List<HmsFaceRecord> faceRecordList = new ArrayList<>();
+        Map<String, List<FaceInfo>> map = new HashMap<>();
+        for (int i = 0; i < results.size(); i++) {
+            MessageRespResult messageRespResult = JSONUtil.toBean(results.get(i), MessageRespResult.class);
+            List<MessageRespResult.InfoBean.SimilarFacesBean> similarFaces = messageRespResult.getInfo().getSimilarFaces();
+            if (CollectionUtil.isNotEmpty(similarFaces)) {
+                MessageRespResult.InfoBean.SimilarFacesBean similarFacesBean = similarFaces.stream().max(Comparator.comparing(MessageRespResult.InfoBean.SimilarFacesBean::getSimilarity))
+                        .orElse(null);
+                String recordId = messageRespResult.getInfo().getRecordId();
+
+                // 相似度保留两位小数
+                double similarity = new BigDecimal(similarFacesBean.getSimilarity() * 100)
+                        .setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                String deviceId = recordId.substring(0, 20);
+                List<FaceInfo> list = map.get(deviceId);
+                if (list == null) {
+                    list = new ArrayList<>();
+                }
+                FaceInfo faceInfo = new FaceInfo();
+                faceInfo.setName(similarFacesBean.getName());
+                faceInfo.setIdCardNo(similarFacesBean.getIdNumber());
+                faceInfo.setGender(GenderEnum.getNameByCode(similarFacesBean.getGender()));
+                faceInfo.setFaceImgUrl(messageRespResult.getInfo().getFaceImgUrl());
+                faceInfo.setAlarmContent(similarFacesBean.getRepositoryName());
+                faceInfo.setSimilarity(similarity + "%");
+
+                // 记录保存
+                HmsFaceRecord hmsFaceRecord = new HmsFaceRecord();
+                hmsFaceRecord.setImgUrl(messageRespResult.getInfo().getFaceImgUrl());
+                hmsFaceRecord.setIdCardNo(similarFacesBean.getIdNumber());
+                hmsFaceRecord.setName(similarFacesBean.getName());
+                hmsFaceRecord.setAlarmTime(new Date());
+                hmsFaceRecord.setGender(similarFacesBean.getGender());
+                hmsFaceRecord.setCreateTime(new Date());
+                hmsFaceRecord.setScore(similarity);
+                hmsFaceRecord.setAlarmContent(similarFacesBean.getRepositoryName());
+                hmsFaceRecord.setDeviceId(deviceId);
+                hmsFaceRecord.setTargetImgUrl(similarFacesBean.getTargetFaceImgUrl());
+                faceRecordList.add(hmsFaceRecord);
+
+                // 同一时刻 相同人只报警一次
+                boolean exist = false;
+                for (int k = 0; k < list.size(); k++) {
+                    FaceInfo faceInfoItem = list.get(k);
+                    if (StrUtil.isNotBlank(faceInfoItem.getIdCardNo()) &&
+                            faceInfoItem.getIdCardNo().equals(faceInfo.getIdCardNo())) {
+                        exist = true;
                     }
                 }
+                if (!exist) {
+                    list.add(faceInfo);
+                }
+                map.put(deviceId, list);
             }
-        });
+        }
 
-    }
-
-    // 车牌识别消息
-    public void relayLicensePlateRecognitionMessage(String ip, int port, String token, String nextMsgId) {
-        /*String content = "?msgId=" + (nextMsgId == null ? 0 : nextMsgId) + "&msgNum=4&type=5";
-        String responseJson = HttpTestUtils.httpRequest(HttpEnum.GET, ip, port, SUBSCRIBE_ACTION, token, content);*/
-
-        String responseJson = "{\"totalCount\":2,\"nextMsgId\":2,\"results\":[{\"method\":\"vms.xxx\",\"id\":1,\"info\":{\"alarmTime\":1554168989841," +
-                "\"capTime\":1554168950000,\"channelCode\":\"ALMURYNQA1B3H3C84OH00C\",\"channelId\":\"ALMURYNQA1B3H3C84OH00C\",\"channelName\":" +
-                "\"54-37773aaaaaaaaaaaaaaaaaaaaaaaa\",\"createTime\":1554168989841,\"event\":\"multiAlarm\",\"imgUrl1\":" +
-                "\"http://13.75.101.250:9000/license-plate/plate1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T035858Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=e7945dea03425f769079ad5fb528e310ca13b9b8826eb4bb33b566e3443485d3\",\"imgUrl2\":" +
-                "\"http://13.75.101.250:9000/license-plate/plate1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T035858Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=e7945dea03425f769079ad5fb528e310ca13b9b8826eb4bb33b566e3443485d3\",\"objId\":\"KSK806_99\",\"objRecordId\":" +
-                "\"MURYNQA1B3H3C84OH00C0220190402013550502560274187\",\"objType\":0," +
-                "\"recordId\":\"be7113cb8c8a47e69afd4e964db0db1f\",\"recordType\":1,\"stat\":1,\"surveyRecordId\":\"3f2a92a6424a49a2ba3854a5dd141e24\"," +
-                "\"surveySource\":1,\"surveyType\":1,\"tagCode\":\"100801\",\"userChannelCode\":\"test_plate_queue\"}}," +
-                "{\"method\":\"vms.xxx\",\"id\":1,\"info\":{\"alarmTime\":1554168989841,\"capTime\":1554168950000,\"channelCode\":\"ALMURYNQA1B3H3C84OH00C\"," +
-                "\"channelId\":\"ALMURYNQA1B3H3C84OH00C\",\"channelName\":\"54-37773aaaaaaaaaaaaaaaaaaaaaaaa\",\"createTime\":1554168989841,\"event\":" +
-                "\"multiAlarm\",\"imgUrl1\":\"http://13.75.101.250:9000/license-plate/plate2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T035959Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=c159035fda3126b7943ce7336064a65065395d47998338a0b946a000f863f191\",\"imgUrl2\":" +
-                "\"http://13.75.101.250:9000/license-plate/plate2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20200711%2F%2Fs3%2Faws4_request&X-Amz-Date=20200711T040031Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=26c7f6fab9001a77bab743b6709a1dcaf87cabbdd4cec8481836f35af0e82762\",\"objId\":\"KSK806_99\",\"objRecordId\":" +
-                "\"MURYNQA1B3H3C84OH00C0220190402013550502560274187\",\"objType\":1,\"recordId\":\"be7113cb8c8a47e69afd4e964db0db1f\",\"recordType\":1,\"stat\":1," +
-                "\"surveyRecordId\":\"3f2a92a6424a49a2ba3854a5dd141e24\",\"surveySource\":1,\"surveyType\":1,\"tagCode\":\"100801\",\"userChannelCode\":" +
-                "\"test_plate_queue\"}}]}";
-
-        Type type = new TypeToken<MessageResp<MessageRespResult<LicensePlateInfoResp>>>() {
-        }.getType();
-        MessageResp<MessageRespResult<LicensePlateInfoResp>> resp = new Gson().fromJson(responseJson, type);
-        // 推送至头盔
-        resp.getResults().forEach(result -> {
-            LicensePlateInfoResp plateResultInfo = result.getInfo();
-
-            // emqtt队列名称
-            String queueName = plateResultInfo.getUserChannelCode();
-            log.info("推送车牌识别消息 主题：{}", queueName);
-            if (StrUtil.isNotBlank(queueName)) {
-                long alarmTime = plateResultInfo.getAlarmTime();
-                String imgUrl1 = plateResultInfo.getImgUrl1();
-                Map<String, Object> map = new HashMap<>();
-                map.put("licensePlateNumber", "沪A88888");
-                map.put("color", "蓝");
-                map.put("imgUrl", imgUrl1);
-                map.put("alarmTime", "2020-07-06 12:00:00");
-                map.put("alarmContent", "车辆未年检");
-                map.put("type", plateResultInfo.getObjType());
-                String message = JSONUtil.toJsonStr(map);
-                log.info("推送车牌识别消息 消息：{}", message);
-                mqttOutputService.sendToMqtt(queueName, message);
+        if (CollectionUtil.isNotEmpty(map)) {
+            for (Map.Entry<String, List<FaceInfo>> entry : map.entrySet()) {
+                String queueName = entry.getKey();
+                String message = JSONUtil.toJsonStr(entry.getValue());
+                log.info("推送人脸消息 队列：{} 消息：{}","face_"+queueName,message);
+                mqttOutputService.sendToMqtt("face_"+queueName, message);
             }
-        });
+            if (CollectionUtil.isNotEmpty(faceRecordList)) {
+                iHmsFaceRecordService.saveBatch(faceRecordList);
+            }
+        }
     }
 }
