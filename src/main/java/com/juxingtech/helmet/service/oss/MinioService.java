@@ -1,6 +1,8 @@
 package com.juxingtech.helmet.service.oss;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.juxingtech.helmet.common.exception.CustomException;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
@@ -20,7 +22,7 @@ public class MinioService {
     private MinioClient minioClient;
 
     public MinioService() {
-        minioClient = new MinioClient("http://13.75.101.250:9000/", "minioadmin", "minioadmin");
+        minioClient = new MinioClient("http://101.37.69.49:9000/", "minioadmin", "minioadmin");
     }
 
     public String upload(MultipartFile file) {
@@ -56,10 +58,15 @@ public class MinioService {
 
     public boolean delete(String path) {
         try {
-            minioClient.removeObject(bucketName, path);
+            if(StringUtils.isBlank(path)) return true;
+            String fileName = path.substring(path.lastIndexOf("/") + 1);
+            minioClient.removeObject(bucketName, fileName);
             return true;
         } catch (Exception e) {
             throw new CustomException("删除失败");
         }
     }
+
+
+
 }

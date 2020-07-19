@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  * @author haoxr
  * @date 2020-07-03
  **/
-@Component
+// @Component
 @Slf4j
 public class HelmetApplicationRunner implements ApplicationRunner, Ordered {
 

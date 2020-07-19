@@ -33,7 +33,6 @@
         <minio.version>7.1.0</minio.version>
     </properties>
 
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
