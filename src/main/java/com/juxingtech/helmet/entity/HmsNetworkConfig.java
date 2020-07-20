@@ -19,13 +19,13 @@ public class HmsNetworkConfig implements Serializable {
     @TableId(type= IdType.INPUT)
     private Integer id;
 
+    private String serverId;
+
     private String serverIp;
 
     private String serverPort;
 
-    private String userId;
-
-    private String userPassword;
+    private String password;
 
     @TableField(exist = false)
     private String imgDeviceId;

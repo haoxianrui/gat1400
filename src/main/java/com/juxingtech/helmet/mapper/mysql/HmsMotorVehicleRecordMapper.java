@@ -26,11 +26,12 @@ public interface HmsMotorVehicleRecordMapper extends BaseMapper<HmsMotorVehicleR
             "   AND b.serial_no like concat('%',#{hmsMotorVehicleRecord.serialNo},'%') " +
             "</if>"+
             "<if test='hmsMotorVehicleRecord.startDate!=null and hmsMotorVehicleRecord.startDate.trim() neq \"\"'>" +
-            "   AND date_format (a.alarm_time,'%Y-%m-%d') &gt;=date_format('#{hmsMotorVehicleRecord.startDate}','%Y-%m-%d') " +
+            "   AND date_format (a.alarm_time,'%Y-%m-%d') &gt;=date_format(#{hmsMotorVehicleRecord.startDate},'%Y-%m-%d') " +
             "</if>"+
             "<if test='hmsMotorVehicleRecord.endDate!=null and hmsMotorVehicleRecord.endDate.trim() neq \"\"'>" +
-            "   AND date_format (a.alarm_time,'%Y-%m-%d') &lt;=date_format('#{hmsMotorVehicleRecord.endDate}','%Y-%m-%d') " +
-            "</if>"+
+            "   AND date_format (a.alarm_time,'%Y-%m-%d') &lt;=date_format(#{hmsMotorVehicleRecord.endDate},'%Y-%m-%d') " +
+            "</if>" +
+            " order by a.alarm_time desc"+
             "</script>")
     Page<HmsMotorVehicleRecord> page(HmsMotorVehicleRecord hmsMotorVehicleRecord, Page<HmsMotorVehicleRecord> page);
 }

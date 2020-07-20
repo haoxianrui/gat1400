@@ -18,21 +18,15 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-//@Configuration
+@Configuration
 @Slf4j
 public class MqttConfiguration {
-/*
-
-    @Autowired
-    private IHmsFaceRecordService iHmsFaceRecordService;
 
     @Autowired
     private MqttProperties mqttProperties;
-    */
-/**
+    /**
      * 工厂配置
-     *//*
-
+     */
     @Bean
     public MqttConnectOptions mqttConnectOptions() {
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -60,11 +54,9 @@ public class MqttConfiguration {
         return factory;
     }
 
-    */
-/**
+    /**
      * 接出配置
-     *//*
-
+     */
     @Bean
     @ServiceActivator(inputChannel = "mqttOutboundChannel")
     public MessageHandler outbound() {
@@ -82,13 +74,11 @@ public class MqttConfiguration {
         return new DirectChannel();
     }
 
-    */
-/**
+    /**
      * 接入配置
      *
      * @return
-     *//*
-
+     */
     @Bean
     public MessageProducer inbound() {
         String[] subTopics = mqttProperties.getSubTopics().split(",");
@@ -105,12 +95,10 @@ public class MqttConfiguration {
     }
 
 
-    */
-/**
+    /**
      * 接收前端头盔传递消息并处理
      * @return
-     *//*
-
+     */
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler handler() {
@@ -128,7 +116,5 @@ public class MqttConfiguration {
     public MessageChannel mqttInputChannel() {
         return new DirectChannel();
     }
-
-*/
 
 }

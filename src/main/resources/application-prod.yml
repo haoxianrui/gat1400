@@ -39,7 +39,7 @@ spring:
     pubClientId: ${random.value}  # 主题发送客户端ID
     subClientId: ${random.value}  # 订阅消息客户端ID
     defaultTopic: default_topic   # 默认发送主题
-    subTopics: face_record_queue,face_13030421191190201061
+    subTopics: face_13030421191190201061
     cleanSession: true
     async: true
   redis:
@@ -59,7 +59,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 oss:
   minio:
@@ -67,3 +67,4 @@ oss:
     access-key: minioadmin
     secret-key: minioadmin
     bucket-name: helmet
+

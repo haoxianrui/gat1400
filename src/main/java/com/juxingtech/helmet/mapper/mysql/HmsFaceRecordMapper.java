@@ -26,11 +26,12 @@ public interface HmsFaceRecordMapper extends BaseMapper<HmsFaceRecord> {
             "   AND b.serial_no like concat('%',#{hmsFaceRecord.serialNo},'%') " +
             "</if>"+
             "<if test='hmsFaceRecord.startDate!=null and hmsFaceRecord.startDate.trim() neq \"\"'>" +
-            "   AND date_format (a.alarm_time,'%Y-%m-%d') &gt;=date_format('#{hmsFaceRecord.startDate}','%Y-%m-%d') " +
+            "   AND date_format (a.alarm_time,'%Y-%m-%d') &gt;=date_format(#{hmsFaceRecord.startDate},'%Y-%m-%d') " +
             "</if>"+
             "<if test='hmsFaceRecord.endDate!=null and hmsFaceRecord.endDate.trim() neq \"\"'>" +
-            "   AND date_format (a.alarm_time,'%Y-%m-%d') &lt;=date_format('#{hmsFaceRecord.endDate}','%Y-%m-%d') " +
-            "</if>"+
+            "   AND date_format (a.alarm_time,'%Y-%m-%d') &lt;=date_format(#{hmsFaceRecord.endDate},'%Y-%m-%d') " +
+            "</if> " +
+            " order by a.alarm_time desc"+
             "</script>")
     Page<HmsFaceRecord> page(HmsFaceRecord hmsFaceRecord, Page<HmsFaceRecord> page);
 }

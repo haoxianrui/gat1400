@@ -1,7 +1,6 @@
 package com.juxingtech.helmet.runner;
 
-import com.juxingtech.helmet.service.pull.LoginService;
-import com.juxingtech.helmet.service.pull.SubscribeService;
+import com.juxingtech.helmet.service.pull.PullService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @author haoxr
  * @date 2020-07-03
  **/
-// @Component
+@Component
 @Slf4j
 public class HelmetApplicationRunner implements ApplicationRunner, Ordered {
 
@@ -31,17 +30,12 @@ public class HelmetApplicationRunner implements ApplicationRunner, Ordered {
     private String password;
 
     @Autowired
-    private LoginService loginService;
-
-    @Autowired
-    private SubscribeService subscribeService;
+    private PullService pullService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        // 大华平台登录定时保活
-        String token = loginService.login(ip, port, username, password);
-        // 大华平台消息订阅
-        subscribeService.subscribe(token);
+        // 大华平台登录、定时保活、拉取人脸报警信息
+        pullService.login(ip, port, username, password);
     }
 
     @Override

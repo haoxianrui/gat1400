@@ -1,5 +1,6 @@
 package com.juxingtech.helmet.controller.api;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.juxingtech.helmet.bean.LicensePlateReq;
 import com.juxingtech.helmet.bean.LicensePlateResp;
@@ -90,7 +91,10 @@ public class LicensePlateController {
             String clztCode = String.valueOf(c);
             clzt += CLZT_MAP.get(clztCode) + ",";
         }
-        resp.setClzt(clzt.substring(0, clzt.length() - 1));
+        if(StrUtil.isNotBlank(clzt)){
+            clzt=clzt.substring(0, clzt.length() - 1);
+        }
+        resp.setClzt(clzt);
         String csysCode = vehicleAll.getCsys();
         String csys = CSYS_MAP.get(csysCode);
         resp.setCsys(csys);

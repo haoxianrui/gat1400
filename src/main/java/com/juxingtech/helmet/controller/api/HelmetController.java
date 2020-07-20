@@ -49,6 +49,7 @@ public class HelmetController {
     public Result upload(
             @RequestBody HelmetInfo helmetInfo
     ) {
+        log.info(helmetInfo.toString());
         Assert.notBlank(helmetInfo.getSerialNo(), "头盔序列号不能为空");
         String helmetInfoJsonStr = JSONUtil.toJsonStr(helmetInfo);
         log.info(helmetInfoJsonStr);

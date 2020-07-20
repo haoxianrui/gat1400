@@ -101,7 +101,9 @@ public class HmsHelmetController {
         int count = iHmsHelmetService.count(new LambdaQueryWrapper<HmsHelmet>().eq(HmsHelmet::getSerialNo,
                 serialNo));
         Assert.isTrue(count <= 0, "头盔序列号已存在");
-        hmsHelmet.setCreateTime(new Date());
+        Date date = new Date();
+        hmsHelmet.setCreateTime(date);
+        hmsHelmet.setUpdateTime(date);
         boolean status = iHmsHelmetService.save(hmsHelmet);
         return Result.status(status);
     }

@@ -4,9 +4,9 @@ package com.juxingtech.helmet.controller.api;
 import cn.hutool.json.JSONUtil;
 import com.juxingtech.helmet.bean.KeepaliveRequestObject;
 import com.juxingtech.helmet.bean.RegisterRequestObject;
-import com.juxingtech.helmet.bean.SystemTimeObject;
 import com.juxingtech.helmet.bean.UnRegisterRequestObject;
 import com.juxingtech.helmet.common.result.Result;
+import com.juxingtech.helmet.service.pull.PullService;
 import com.juxingtech.helmet.util.DigestUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -211,5 +211,19 @@ public class SystemController {
 
         String time = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now());
         return Result.success(time);
+    }
+
+
+    @Autowired
+    private PullService pullService;
+
+    @PostMapping("/logout")
+    @ApiOperation(value = "退出", httpMethod = "POST")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "token", value = "token", example = "", required = true, paramType = "query")
+    })
+    public Result logout(String token) {
+        pullService.logout(token);
+        return Result.success();
     }
 }

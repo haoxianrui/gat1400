@@ -22,7 +22,7 @@ public class MinioService {
     private MinioClient minioClient;
 
     public MinioService() {
-        minioClient = new MinioClient("http://101.37.69.49:9000/", "minioadmin", "minioadmin");
+        minioClient = new MinioClient("http://13.75.101.250:9000/", "minioadmin", "minioadmin");
     }
 
     public String upload(MultipartFile file) {
