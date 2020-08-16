@@ -2,11 +2,16 @@ package com.juxingtech.helmet.controller.api;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.juxingtech.helmet.bean.LicensePlateReq;
 import com.juxingtech.helmet.bean.LicensePlateResp;
 import com.juxingtech.helmet.common.result.Result;
+import com.juxingtech.helmet.entity.HmsHelmet;
+import com.juxingtech.helmet.entity.HmsLicensePlate;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
 import com.juxingtech.helmet.entity.VehicleAll;
+import com.juxingtech.helmet.service.IHmsHelmetService;
+import com.juxingtech.helmet.service.IHmsLicensePlateService;
 import com.juxingtech.helmet.service.IHmsMotorVehicleRecordService;
 import com.juxingtech.helmet.service.IVehicleAllService;
 import com.juxingtech.helmet.service.oss.MinioService;
@@ -41,6 +46,12 @@ public class LicensePlateController {
     @Autowired
     private MinioService minioService;
 
+    @Autowired
+    private IHmsHelmetService iHmsHelmetService;
+
+    @Autowired
+    private IHmsLicensePlateService iHmsLicensePlateService;
+
     @PostMapping
     @ApiOperation(value = "车牌信息上传", httpMethod = "POST")
     @ApiImplicitParams({
@@ -53,6 +64,24 @@ public class LicensePlateController {
         String hpzl;
         resp.setHphm(req.getPlateNo());
         resp.setHpys(req.getPlateColor());
+
+        // 先检查黑名单白名单库
+        HmsLicensePlate plate = iHmsLicensePlateService.getOne(new LambdaQueryWrapper<HmsLicensePlate>()
+                .eq(HmsLicensePlate::getPlateNo, req.getPlateNo())
+        );
+        if (plate != null) {
+            resp.setStatus(1); // 识别出
+            if (plate.getType().equals(1)) { //黑名单
+                resp.setType(1);
+                resp.setClzt("违章车辆(车主:" + plate.getUsername()+")");
+            } else if (plate.getType().equals(2)) { //白名单
+                resp.setType(0);
+                resp.setClzt("正常车辆");
+            }
+            return Result.success(resp);
+        }
+
+
         if (plateColor.equals("蓝")) {
             hpzl = "02";
         } else if (plateColor.equals("黄")) {
@@ -91,8 +120,8 @@ public class LicensePlateController {
             String clztCode = String.valueOf(c);
             clzt += CLZT_MAP.get(clztCode) + ",";
         }
-        if(StrUtil.isNotBlank(clzt)){
-            clzt=clzt.substring(0, clzt.length() - 1);
+        if (StrUtil.isNotBlank(clzt)) {
+            clzt = clzt.substring(0, clzt.length() - 1);
         }
         resp.setClzt(clzt);
         String csysCode = vehicleAll.getCsys();
@@ -121,6 +150,18 @@ public class LicensePlateController {
         hmsMotorVehicleRecord.setImgUrl(imgUrl);
         iHmsMotorVehicleRecordService.save(hmsMotorVehicleRecord);
 
+        // 头盔统计车牌数
+        HmsHelmet helmet = iHmsHelmetService.getOne(new LambdaQueryWrapper<HmsHelmet>()
+                .eq(HmsHelmet::getImgDeviceId, req.getDeviceId()));
+        if (helmet != null) {
+            Long vehicleCountToday = helmet.getVehicleCountToday() != null ? helmet.getVehicleCountToday() : 0;
+            Long vehicleCountTotal = helmet.getVehicleCountTotal() != null ? helmet.getVehicleCountTotal() : 0;
+            iHmsHelmetService.update(new LambdaUpdateWrapper<HmsHelmet>()
+                    .eq(HmsHelmet::getImgDeviceId, req.getDeviceId())
+                    .set(HmsHelmet::getVehicleCountToday, ++vehicleCountToday)
+                    .set(HmsHelmet::getVehicleCountTotal, ++vehicleCountTotal)
+            );
+        }
         return Result.success(resp);
     }
 

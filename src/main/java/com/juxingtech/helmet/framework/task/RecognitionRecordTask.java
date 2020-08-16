@@ -2,10 +2,14 @@ package com.juxingtech.helmet.framework.task;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.juxingtech.helmet.entity.HmsFaceRecord;
+import com.juxingtech.helmet.entity.HmsHelmet;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
 import com.juxingtech.helmet.entity.HmsRecognitionRecordStats;
 import com.juxingtech.helmet.service.IHmsFaceRecordService;
+import com.juxingtech.helmet.service.IHmsHelmetService;
 import com.juxingtech.helmet.service.IHmsMotorVehicleRecordService;
 import com.juxingtech.helmet.service.IHmsRecognitionRecordStatsService;
 import com.juxingtech.helmet.service.oss.MinioService;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 识别记录定时任务
@@ -24,6 +29,9 @@ import java.util.List;
 @Component
 @Slf4j
 public class RecognitionRecordTask {
+
+    @Autowired
+    private IHmsHelmetService iHmsHelmetService;
 
     @Autowired
     private IHmsRecognitionRecordStatsService iHmsRecognitionRecordStatsService;
@@ -75,18 +83,26 @@ public class RecognitionRecordTask {
         LocalDateTime now = LocalDateTime.now();
         String yesterday = dateTimeFormatter.format(now.minusDays(1));
 
-        int faceRecordCount = iHmsFaceRecordService.count(new LambdaQueryWrapper<HmsFaceRecord>().apply(
-                "date_format(alarm_time,'%Y-%m-%d') = date_format('" + yesterday + "','%Y-%m-%d')"
-        ));
 
-        int motorVehicleRecordCount = iHmsMotorVehicleRecordService.count(new LambdaQueryWrapper<HmsMotorVehicleRecord>().apply(
-                "date_format(alarm_time,'%Y-%m-%d') = date_format('" + yesterday + "','%Y-%m-%d')"
-        ));
+        Map<String, Object> map = iHmsHelmetService.getMap(new QueryWrapper<HmsHelmet>()
+                .eq("status", 1)
+                .select("COALESCE(sum(face_count_today),0) as faceRecordCount",
+                        "COALESCE(sum(vehicle_count_today),0) as motorVehicleRecordCount")
+        );
+
+        Long faceRecordCount = Long.valueOf(map.get("faceRecordCount").toString()) ;
+        Long motorVehicleRecordCount = Long.valueOf(map.get("motorVehicleRecordCount").toString()) ;
 
         HmsRecognitionRecordStats hmsRecognitionRecordStats = new HmsRecognitionRecordStats();
         hmsRecognitionRecordStats.setDate(yesterday);
         hmsRecognitionRecordStats.setFaceRecordCount(faceRecordCount);
         hmsRecognitionRecordStats.setMotorVehicleRecordCount(motorVehicleRecordCount);
         iHmsRecognitionRecordStatsService.save(hmsRecognitionRecordStats);
+
+        // 清零当天头盔统计数
+        iHmsHelmetService.update(
+                new LambdaUpdateWrapper<HmsHelmet>()
+                        .set(HmsHelmet::getFaceCountToday, 0)
+                        .set(HmsHelmet::getVehicleCountToday, 0));
     }
 }

@@ -13,7 +13,7 @@ import java.io.Serializable;
  * @author haoxr
  * @date 2020-07-05
  **/
-@Configuration
+// @Configuration
 public class RedisConfig {
 
     @Bean

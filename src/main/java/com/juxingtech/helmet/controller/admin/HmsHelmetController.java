@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * @date 2020-07-06
  **/
 @Api
-@RestController
+// @RestController
 @Slf4j
 @RequestMapping("/helmets")
 public class HmsHelmetController {
@@ -57,7 +57,7 @@ public class HmsHelmetController {
             @ApiImplicitParam(name = "name", value = "头盔名称", paramType = "query", dataType = "String"),
     })
     @GetMapping
-    public Result list(Integer page, Integer limit, String deviceId, String name, String serialNo) {
+    public Result list(Integer page, Integer limit, String name, String serialNo) {
         LambdaQueryWrapper<HmsHelmet> queryWrapper = new LambdaQueryWrapper<HmsHelmet>()
                 .like(StrUtil.isNotBlank(serialNo), HmsHelmet::getSerialNo, serialNo)
                 .like(StrUtil.isNotBlank(name), HmsHelmet::getName, name)
@@ -145,7 +145,7 @@ public class HmsHelmetController {
         int disabledNum = iHmsHelmetService.count(new LambdaQueryWrapper<HmsHelmet>()
                 .eq(HmsHelmet::getStatus, 0));
         int total = iHmsHelmetService.count();
-        int onlineNum = redisTemplate.keys(HelmetConstants.REDIS_KEY_PREFIX_HELMET).size();
+        int onlineNum = redisTemplate.keys(HelmetConstants.REDIS_KEY_PREFIX_HELMET+"*").size();
         int offlineNum = total - onlineNum;
         Map<String, Integer> map = new HashMap<>();
         map.put("disabledNum", disabledNum);

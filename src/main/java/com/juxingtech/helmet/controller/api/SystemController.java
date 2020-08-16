@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Api(tags = "GAT/1400 会话管理接口")
-@RestController
+// @RestController
 @RequestMapping("/api/v1/system")
 @Slf4j
 public class SystemController {
@@ -215,7 +215,7 @@ public class SystemController {
 
 
     @Autowired
-    private PullService pullService;
+    // private PullService pullService;
 
     @PostMapping("/logout")
     @ApiOperation(value = "退出", httpMethod = "POST")
@@ -223,7 +223,7 @@ public class SystemController {
             @ApiImplicitParam(name = "token", value = "token", example = "", required = true, paramType = "query")
     })
     public Result logout(String token) {
-        pullService.logout(token);
+       // pullService.logout(token);
         return Result.success();
     }
 }

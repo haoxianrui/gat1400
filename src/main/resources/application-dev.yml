@@ -16,13 +16,20 @@ pull-server:
 
 spring:
   datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
-    username: root
-    password: 123456
+    druid:
+      mysql:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
+        username: root
+        password: 123456
+      oracle:
+        driver-class-name: oracle.jdbc.driver.OracleDriver
+        url: jdbc:oracle:thin:@13.75.103.4:15211:orcl
+        username: zhinengtoukui
+        password: zhinengtoukui
+
   mqtt:
-    url: tcp://www.juxingtech.cn:1883
+    url: tcp://13.75.101.250:1883
     username: admin
     password: public
     connectionTimeout: 30
@@ -32,14 +39,14 @@ spring:
     pubClientId: ${random.value}  # 主题发送客户端ID
     subClientId: ${random.value}  # 订阅消息客户端ID
     defaultTopic: default_topic   # 默认发送主题
-    subTopics: test_face_queue,test_plate_queue
+    subTopics: face_13030421191190201061
     cleanSession: true
     async: true
   redis:
     database: 0
-    host: localhost
+    host: 13.75.101.250
     port: 6379
-    password:
+    password: 123456
     lettuce:
       pool:
         max-active: 8
@@ -47,7 +54,6 @@ spring:
         max-idle: 8
         min-idle: 0
 
-cron: 0/60 * * * * ?
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -56,7 +62,8 @@ mybatis-plus:
 
 oss:
   minio:
-    endpoint: http://101.37.69.49:9000/
+    endpoint: http://13.75.101.250:9000/
     access-key: minioadmin
     secret-key: minioadmin
-    bucket-name: qinhuangdao
+    bucket-name: helmet
+

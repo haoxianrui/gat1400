@@ -38,4 +38,13 @@ public class HmsHelmet implements Serializable {
 
     @TableField(exist = false)
     private Integer onlineStatus;
+
+    private Long faceCountToday;
+
+    private Long faceCountTotal;
+
+    private Long vehicleCountToday;
+
+    private Long vehicleCountTotal;
+
 }

@@ -6,7 +6,7 @@
 
     <groupId>com.juxingtech</groupId>
     <artifactId>helmet</artifactId>
-    <version>1.0.0</version>
+    <version>test</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -161,6 +161,17 @@
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
             <version>11.2.0.4.0-atlassian-hosted</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.17</version>
         </dependency>
     </dependencies>
 

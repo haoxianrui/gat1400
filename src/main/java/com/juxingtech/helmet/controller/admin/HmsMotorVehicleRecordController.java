@@ -1,23 +1,26 @@
 package com.juxingtech.helmet.controller.admin;
 
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.juxingtech.helmet.common.result.PageResult;
 import com.juxingtech.helmet.common.result.Result;
-import com.juxingtech.helmet.entity.HmsFaceRecord;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
+import com.juxingtech.helmet.entity.HmsRecognitionRecordStats;
 import com.juxingtech.helmet.service.IHmsMotorVehicleRecordService;
+import com.juxingtech.helmet.service.IHmsRecognitionRecordStatsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author haoxr
@@ -31,6 +34,9 @@ public class HmsMotorVehicleRecordController {
 
     @Resource
     private IHmsMotorVehicleRecordService iHmsMotorVehicleRecordService;
+
+    @Autowired
+    private IHmsRecognitionRecordStatsService iHmsRecognitionRecordStatsService;
 
     @ApiOperation(value = "列表分页", httpMethod = "GET")
     @ApiImplicitParams({
@@ -56,7 +62,12 @@ public class HmsMotorVehicleRecordController {
     @ApiOperation(value = "获取车牌识别记录数", httpMethod = "GET")
     @GetMapping("/count")
     public Result count() {
-        int count = iHmsMotorVehicleRecordService.count();
-        return Result.success(count);
+
+        Map<String, Object> map = iHmsRecognitionRecordStatsService.getMap(
+                new QueryWrapper<HmsRecognitionRecordStats>()
+                .select("COALESCE(sum(motor_vehicle_record_count),0) as motorVehicleRecordCount")
+        );
+        Long motorVehicleRecordCount = Long.valueOf(map.get("motorVehicleRecordCount").toString());
+        return Result.success(motorVehicleRecordCount);
     }
 }

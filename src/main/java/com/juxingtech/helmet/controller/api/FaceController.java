@@ -3,6 +3,8 @@ package com.juxingtech.helmet.controller.api;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.juxingtech.helmet.bean.FaceInfoReq;
 import com.juxingtech.helmet.bean.FaceRequestObject;
 import com.juxingtech.helmet.bean.ResponseStatusObjectWrapper;
@@ -10,6 +12,8 @@ import com.juxingtech.helmet.bean.SubImageInfo;
 import com.juxingtech.helmet.common.constant.HelmetConstants;
 import com.juxingtech.helmet.common.result.Result;
 import com.juxingtech.helmet.common.result.ResultCodeEnum;
+import com.juxingtech.helmet.entity.HmsHelmet;
+import com.juxingtech.helmet.service.IHmsHelmetService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -51,6 +55,9 @@ public class FaceController {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private IHmsHelmetService iHmsHelmetService;
 
     @PostMapping
     @ApiOperation(value = "人脸识别信息上传", httpMethod = "POST")
@@ -134,11 +141,11 @@ public class FaceController {
         headers.setContentType(MediaType.parseMediaType("application/json;charset=utf-8"));
         headers.set("User-Identify", faceInfoReq.getDeviceId());
         HttpEntity<String> httpEntity = new HttpEntity<>(JSONUtil.toJsonStr(faceRequestObject), headers);
-        log.info("上传人脸消息体：{}",JSONUtil.toJsonStr(faceRequestObject));
+        log.info("上传人脸消息体：{}", JSONUtil.toJsonStr(faceRequestObject));
 
         String url = "http://" + ip + ":" + port + "/VIID/Faces";
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, httpEntity, String.class);
-        log.info("上传人脸响应结果：{}",responseEntity);
+        log.info("上传人脸响应结果：{}", responseEntity);
         int statusCode = responseEntity.getStatusCode().value();
         if (statusCode == HttpStatus.SC_OK) {
             String responseBody = responseEntity.getBody();
@@ -146,6 +153,21 @@ public class FaceController {
                 ResponseStatusObjectWrapper responseStatusObjectWrapper = JSONUtil.toBean(responseBody, ResponseStatusObjectWrapper.class);
                 int uploadStatus = responseStatusObjectWrapper.getResponseStatusObject().getStatusCode();
                 if (uploadStatus == 0) {
+                    // 头盔统计人脸数
+                    HmsHelmet helmet = iHmsHelmetService.getOne(
+                            new LambdaQueryWrapper<HmsHelmet>()
+                                    .eq(HmsHelmet::getImgDeviceId, faceInfoReq.getDeviceId()));
+
+                    if (helmet != null) {
+                        Long faceCountToday = helmet.getFaceCountToday() != null ? helmet.getFaceCountToday() : 0;
+                        Long faceCountTotal = helmet.getFaceCountTotal() != null ? helmet.getFaceCountTotal() : 0;
+
+                        iHmsHelmetService.update(new LambdaUpdateWrapper<HmsHelmet>()
+                                .eq(HmsHelmet::getImgDeviceId,faceInfoReq.getDeviceId())
+                                .set(HmsHelmet::getFaceCountToday, ++faceCountToday)
+                                .set(HmsHelmet::getFaceCountTotal, ++faceCountTotal)
+                        );
+                    }
                     return Result.success();
                 }
             }

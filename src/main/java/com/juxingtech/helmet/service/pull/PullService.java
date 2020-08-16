@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledFuture;
  * @author haoxr
  * @date 2020-07-03
  **/
-@Service
+// @Service
 @Slf4j
 public class PullService {
 
@@ -137,7 +137,7 @@ public class PullService {
         String[] addressArr = subscribeAddress.split(":");
 
         // 定时拉取人脸识别消息
-        String faceCron = "0/3 * * * * ?";
+        String faceCron = "0/5 * * * * ?";
         faceSchedule = threadPoolTaskScheduler.schedule(
                 () -> {
                     String content = "?msgId=" + (nextMsgId == null ? 0 : nextMsgId) + "&msgNum=64&type=8";

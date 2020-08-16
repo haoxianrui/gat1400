@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 
 @Slf4j
-@Service
+// @Service
 public class PushCallBack implements MqttCallback {
 
     @Override

@@ -12,8 +12,8 @@ public class HmsRecognitionRecordStats {
 
     private String date;
 
-    private Integer faceRecordCount;
+    private Long faceRecordCount;
 
-    private Integer motorVehicleRecordCount;
+    private Long motorVehicleRecordCount;
 
 }
