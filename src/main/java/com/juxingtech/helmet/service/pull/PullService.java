@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledFuture;
  * @author haoxr
  * @date 2020-07-03
  **/
-// @Service
+ @Service
 @Slf4j
 public class PullService {
 

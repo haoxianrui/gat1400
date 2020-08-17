@@ -24,6 +24,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -106,22 +107,22 @@ public class HmsLicensePlateController {
     }
 
     @ApiOperation(value = "删除车牌", httpMethod = "DELETE")
-    @ApiImplicitParam(name = "ids[]", value = "id集合", required = true, paramType = "query", allowMultiple = true, dataType = "Long")
     @DeleteMapping
-    public Result delete(@RequestParam("ids") List<Long> ids) {
-        boolean status = iHmsLicensePlateService.removeByIds(ids);
+    public Result delete(@RequestBody String[] ids) {
+        List<String> idList = Arrays.asList(ids);
+        boolean status = iHmsLicensePlateService.removeByIds(idList);
         return Result.status(status);
     }
 
 
     @PostMapping("/excel")
-    public Result uploadExcel(@RequestParam(value = "file") MultipartFile file) {
+    public Result uploadExcel(@RequestParam(value = "file") MultipartFile file,@RequestParam("type") Integer type) {
         String fileName = file.getOriginalFilename();
         if (!fileName.matches("^.+\\.(?i)(xls)$") && !fileName.matches("^.+\\.(?i)(xlsx)$")) {
             return Result.error("上传文件格式不正确");
         }
-
         try {
+            Date date = new Date();
             InputStream inputStream = file.getInputStream();
             HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(inputStream));
             HSSFSheet sheet = workbook.getSheetAt(0);
@@ -146,16 +147,30 @@ public class HmsLicensePlateController {
 
             int totalNum = list.size();
             int repeatNum = 0;
-            int successNum = 0;
+            List<HmsLicensePlate> addList = new ArrayList<>();
             for (int i = 0; i < list.size(); i++) {
-                iHmsLicensePlateService.getOne(new LambdaQueryWrapper<HmsLicensePlate>())
-
-                log.info("条数", list.size());
+                HmsLicensePlate hmsLicensePlate = list.get(i);
+                int count = iHmsLicensePlateService.count(new LambdaQueryWrapper<HmsLicensePlate>()
+                        .eq(HmsLicensePlate::getPlateNo, hmsLicensePlate.getPlateNo()));
+                if (count >= 1) {
+                    repeatNum++;
+                } else {
+                    hmsLicensePlate.setType(type);
+                    hmsLicensePlate.setCreateTime(date);
+                    hmsLicensePlate.setUpdateTime(date);
+                    addList.add(hmsLicensePlate);
+                }
             }
+            int successNum = addList.size();
+            if (successNum > 0) {
+                iHmsLicensePlateService.saveBatch(addList);
+            }
+            return Result.success("导入成功。车牌总条数:" + totalNum +
+                    "，重复车牌数:" + repeatNum + "，导入成功数:" + successNum);
 
         } catch (Exception e) {
             return Result.error("导入失败");
         }
-        return Result.success();
+
     }
 }

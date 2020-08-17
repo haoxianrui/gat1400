@@ -33,7 +33,7 @@ public class DruidConfig {
         return  DruidDataSourceBuilder.create().build();
     }
 
-    // @Bean(name = "oracle")
+    @Bean(name = "oracle")
     @ConfigurationProperties(prefix = "spring.datasource.druid.oracle")
     public DataSource oracleDataSource(){
         return  DruidDataSourceBuilder.create().build();
@@ -44,12 +44,12 @@ public class DruidConfig {
     @Primary
     public DataSource dynamicDataSource(
             @Qualifier("mysql") DataSource mysqlDataSource
-            // , @Qualifier("oracle") DataSource oracleDataSource
+            , @Qualifier("oracle") DataSource oracleDataSource
     ){
 
         Map<Object,Object> targetDataSources=new HashMap<>();
         targetDataSources.put(DataSourceTypeEnum.mysql.getValue(),mysqlDataSource);
-        //targetDataSources.put(DataSourceTypeEnum.oracle.getValue(),oracleDataSource);
+        targetDataSources.put(DataSourceTypeEnum.oracle.getValue(),oracleDataSource);
 
         DynamicDataSource dynamicDataSource=new DynamicDataSource();
         dynamicDataSource.setTargetDataSources(targetDataSources);
@@ -61,8 +61,7 @@ public class DruidConfig {
     @Bean("sqlSessionFactory")
     public SqlSessionFactory sqlSessionFactory() throws Exception {
         MybatisSqlSessionFactoryBean sqlSessionFactory=new MybatisSqlSessionFactoryBean();
-        // sqlSessionFactory.setDataSource(dynamicDataSource(mysqlDataSource(),oracleDataSource()));
-        sqlSessionFactory.setDataSource(mysqlDataSource());
+        sqlSessionFactory.setDataSource(dynamicDataSource(mysqlDataSource(),oracleDataSource()));
         MybatisConfiguration configuration=new MybatisConfiguration();
         configuration.setJdbcTypeForNull(JdbcType.NULL);
         configuration.setMapUnderscoreToCamelCase(true);

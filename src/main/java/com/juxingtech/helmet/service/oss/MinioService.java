@@ -1,12 +1,10 @@
 package com.juxingtech.helmet.service.oss;
 
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.juxingtech.helmet.common.exception.CustomException;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import sun.misc.BASE64Decoder;

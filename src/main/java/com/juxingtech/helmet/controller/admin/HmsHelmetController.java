@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * @date 2020-07-06
  **/
 @Api
-// @RestController
+@RestController
 @Slf4j
 @RequestMapping("/helmets")
 public class HmsHelmetController {
