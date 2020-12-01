@@ -2,7 +2,7 @@ package com.juxingtech.helmet.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.juxingtech.helmet.entity.HmsNetworkConfig;
-import com.juxingtech.helmet.mapper.mysql.HmsNetworkConfigMapper;
+import com.juxingtech.helmet.mapper.HmsNetworkConfigMapper;
 import com.juxingtech.helmet.service.IHmsNetworkConfigService;
 import org.springframework.stereotype.Service;
 

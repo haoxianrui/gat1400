@@ -1,4 +1,4 @@
-package com.juxingtech.helmet.mapper.mysql;
+package com.juxingtech.helmet.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

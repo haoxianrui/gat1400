@@ -1,6 +1,6 @@
 package com.juxingtech.helmet.controller.api;
 
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.juxingtech.helmet.bean.LicensePlateReq;
@@ -9,11 +9,9 @@ import com.juxingtech.helmet.common.result.Result;
 import com.juxingtech.helmet.entity.HmsHelmet;
 import com.juxingtech.helmet.entity.HmsLicensePlate;
 import com.juxingtech.helmet.entity.HmsMotorVehicleRecord;
-import com.juxingtech.helmet.entity.VehicleAll;
 import com.juxingtech.helmet.service.IHmsHelmetService;
 import com.juxingtech.helmet.service.IHmsLicensePlateService;
 import com.juxingtech.helmet.service.IHmsMotorVehicleRecordService;
-import com.juxingtech.helmet.service.IVehicleAllService;
 import com.juxingtech.helmet.service.oss.MinioService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -22,13 +20,20 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Api(tags = "车牌接口")
@@ -37,8 +42,6 @@ import java.util.Map;
 @Slf4j
 public class LicensePlateController {
 
-    @Autowired
-    private IVehicleAllService iVehicleAllService;
 
     @Autowired
     private IHmsMotorVehicleRecordService iHmsMotorVehicleRecordService;
@@ -52,93 +55,59 @@ public class LicensePlateController {
     @Autowired
     private IHmsLicensePlateService iHmsLicensePlateService;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${service.license-plate.url}")
+    private String plateUrl;
+
+
     @PostMapping
     @ApiOperation(value = "车牌信息上传", httpMethod = "POST")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "req", value = "实体JSON对象", required = true, paramType = "body", dataType = "LicensePlateReq")
     })
     public Result upload(@RequestBody LicensePlateReq req) {
+
         LicensePlateResp resp = new LicensePlateResp();
         // 只识别号牌种类 01-黄牌  02-蓝牌 的车牌
+        String plateNo = req.getPlateNo();
         String plateColor = req.getPlateColor();
-        String hpzl;
-        resp.setHphm(req.getPlateNo());
-        resp.setHpys(req.getPlateColor());
+
+        resp.setHphm(plateNo);
+        resp.setHpys(plateColor);
 
         // 先检查黑名单白名单库
         HmsLicensePlate plate = iHmsLicensePlateService.getOne(new LambdaQueryWrapper<HmsLicensePlate>()
-                .eq(HmsLicensePlate::getPlateNo, req.getPlateNo())
+                .eq(HmsLicensePlate::getPlateNo, plateNo)
         );
         if (plate != null) {
             resp.setStatus(1); // 识别出
             if (plate.getType().equals(1)) { //黑名单
                 resp.setType(1);
-                resp.setClzt("违章车辆(车主:" + plate.getUsername()+")");
+                resp.setClzt("黑名单(车主:" + plate.getUsername() + ")");
             } else if (plate.getType().equals(2)) { //白名单
                 resp.setType(0);
-                resp.setClzt("正常车辆");
+                resp.setClzt("白名单");
             }
             return Result.success(resp);
         }
 
 
-        if (plateColor.equals("蓝")) {
-            hpzl = "02";
-        } else if (plateColor.equals("黄")) {
-            hpzl = "01";
-        } else {
-            resp.setStatus(0);
-            resp.setClzt("未识别");
-            return Result.success(resp);
-        }
-
-        String plateNo = req.getPlateNo();
-        String plateNoPrefix = plateNo.substring(0, 1);
-        String plateNoSuffix = plateNo.substring(1);
-        if (!plateNoPrefix.equals("冀")) {
-            resp.setStatus(0);
-            resp.setClzt("外地车牌");
-            return Result.success(resp);
-        }
-
-        VehicleAll vehicleAll = iVehicleAllService.getOne(
-                new LambdaQueryWrapper<VehicleAll>()
-                        .eq(VehicleAll::getHphm, plateNoSuffix)
-                        .eq(VehicleAll::getHpzl, hpzl)
-        );
-        if (vehicleAll == null) {
-            resp.setStatus(0);
-            resp.setClzt("未识别");
-            return Result.success(resp);
-        }
-        HmsMotorVehicleRecord hmsMotorVehicleRecord = new HmsMotorVehicleRecord();
-        String zt = vehicleAll.getZt();
-        char[] chars = zt.toCharArray();
+        Map<String, String> params = new HashMap<>();
+        params.put("plateNo", plateNo);
+        params.put("plateColor", plateColor);
+        Result result = restTemplate.getForObject(plateUrl
+                        + "/api/v1/vehicles?plateNo={plateNo}&plateColor={plateColor}",
+                Result.class, params);
+        LinkedHashMap data = (LinkedHashMap) result.getData();
         String clzt = Strings.EMPTY;
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
-            String clztCode = String.valueOf(c);
-            clzt += CLZT_MAP.get(clztCode) + ",";
+        if (data != null) {
+            clzt = (String) data.get("clzt");
         }
-        if (StrUtil.isNotBlank(clzt)) {
-            clzt = clzt.substring(0, clzt.length() - 1);
-        }
-        resp.setClzt(clzt);
-        String csysCode = vehicleAll.getCsys();
-        String csys = CSYS_MAP.get(csysCode);
-        resp.setCsys(csys);
-        resp.setClpp(vehicleAll.getClpp1());
-        if (clzt.contains("正常")) {
-            resp.setType(0);
-        } else {
-            resp.setType(1);
-        }
-        String cllx = CLLX_MAP.get(vehicleAll.getCllx());
-        String syxz = SYXZ_MAP.get(vehicleAll.getSyxz());
-        resp.setCllx(cllx);
-        resp.setSyxz(syxz);
-        resp.setStatus(1);
-        // 保存记录
+
+        // 头盔识别记录
+        HmsMotorVehicleRecord hmsMotorVehicleRecord = new HmsMotorVehicleRecord();
         hmsMotorVehicleRecord.setDeviceId(req.getDeviceId());
         hmsMotorVehicleRecord.setAlarmTime(new Date());
         hmsMotorVehicleRecord.setAlarmContent(clzt);
@@ -162,7 +131,7 @@ public class LicensePlateController {
                     .set(HmsHelmet::getVehicleCountTotal, ++vehicleCountTotal)
             );
         }
-        return Result.success(resp);
+        return result;
     }
 
 

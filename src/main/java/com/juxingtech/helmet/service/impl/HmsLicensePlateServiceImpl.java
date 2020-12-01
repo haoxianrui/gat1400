@@ -2,7 +2,7 @@ package com.juxingtech.helmet.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.juxingtech.helmet.entity.HmsLicensePlate;
-import com.juxingtech.helmet.mapper.mysql.HmsLicensePlateMapper;
+import com.juxingtech.helmet.mapper.HmsLicensePlateMapper;
 import com.juxingtech.helmet.service.IHmsLicensePlateService;
 import org.springframework.stereotype.Service;
 

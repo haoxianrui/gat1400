@@ -22,11 +22,6 @@ spring:
         url: jdbc:mysql://13.75.101.250:3306/helmet?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true
         username: root
         password: 123456
-      oracle:
-        driver-class-name: oracle.jdbc.driver.OracleDriver
-        url: jdbc:oracle:thin:@13.75.103.4:15211:orcl
-        username: zhinengtoukui
-        password: zhinengtoukui
 
   mqtt:
     url: tcp://13.75.101.250:1883
@@ -67,3 +62,6 @@ oss:
     secret-key: minioadmin
     bucket-name: helmet
 
+service:
+  license-plate:
+    url: http://13.75.101.250:8110
