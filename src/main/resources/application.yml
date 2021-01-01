@@ -1,0 +1,8 @@
+server:
+  port: 8888
+
+server1400:
+  ip: 192.168.1.1
+  port: 9999
+  username: admin
+  password: 123456
